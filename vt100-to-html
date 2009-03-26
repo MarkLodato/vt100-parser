@@ -10,7 +10,9 @@ UNDERLINE = 2
 BLINK     = 4
 INVERSE   = 8
 FG        = 0xf0
+FG_SET    = 0x80
 BG        = 0xf00
+BG_SET    = 0x800
 BLACK     = 0
 RED       = 1
 GREEN     = 2
@@ -19,50 +21,22 @@ BLUE      = 4
 MAGENTA   = 5
 CYAN      = 6
 WHITE     = 7
-
-
-class Attributes (object):
-    __slots__ = ['bold', 'underline', 'blink', 'fg', 'bg']
-    def __init__(self):
-        self.reset()
-    def reset(self):
-        self.bold       = False
-        self.underline  = False
-        self.blink      = False
-        self.inverse    = False
-        self.fg         = None
-        self.bg         = None
-    def set(self, codes):
-        if not codes:
-            codes = [0]
-        for c in codes:
-            try:
-                self.attributes[c](self)
-            except KeyError:
-                pass
-    attributes = {
-            0 : reset,
-            1 : lambda self: self.bold = True,
-            4 : lambda self: self.underline = True,
-            5 : lambda self: self.blink = True,
-            7 : lambda self: self.inverse = True,
-            30 : lambda self: self.fg = 'black',
-            31 : lambda self: self.fg = 'red',
-            32 : lambda self: self.fg = 'green',
-            33 : lambda self: self.fg = 'yellow',
-            34 : lambda self: self.fg = 'blue',
-            35 : lambda self: self.fg = 'magenta',
-            36 : lambda self: self.fg = 'cyan',
-            37 : lambda self: self.fg = 'white',
-            40 : lambda self: self.bg = 'black',
-            41 : lambda self: self.bg = 'red',
-            42 : lambda self: self.bg = 'green',
-            43 : lambda self: self.bg = 'yellow',
-            44 : lambda self: self.bg = 'blue',
-            45 : lambda self: self.bg = 'magenta',
-            46 : lambda self: self.bg = 'cyan',
-            47 : lambda self: self.bg = 'white',
-            }
+FG_BLACK   = 0x80
+FG_RED     = 0x90
+FG_GREEN   = 0xa0
+FG_YELLOW  = 0xb0
+FG_BLUE    = 0xc0
+FG_MAGENTA = 0xd0
+FG_CYAN    = 0xe0
+FG_WHITE   = 0xf0
+BG_BLACK   = 0x800
+BG_RED     = 0x900
+BG_GREEN   = 0xa00
+BG_YELLOW  = 0xb00
+BG_BLUE    = 0xc00
+BG_MAGENTA = 0xd00
+BG_CYAN    = 0xe00
+BG_WHITE   = 0xf00
 
 
 class Character (object):
