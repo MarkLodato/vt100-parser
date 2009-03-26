@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+
+import sys, os
+
+EXT = '.html'
+
+
+BOLD      = 1
+UNDERLINE = 2
+BLINK     = 4
+INVERSE   = 8
+FG        = 0xf0
+BG        = 0xf00
+BLACK     = 0
+RED       = 1
+GREEN     = 2
+YELLOW    = 3
+BLUE      = 4
+MAGENTA   = 5
+CYAN      = 6
+WHITE     = 7
+
+
+class Attributes (object):
+    __slots__ = ['bold', 'underline', 'blink', 'fg', 'bg']
+    def __init__(self):
+        self.reset()
+    def reset(self):
+        self.bold       = False
+        self.underline  = False
+        self.blink      = False
+        self.inverse    = False
+        self.fg         = None
+        self.bg         = None
+    def set(self, codes):
+        if not codes:
+            codes = [0]
+        for c in codes:
+            try:
+                self.attributes[c](self)
+            except KeyError:
+                pass
+    attributes = {
+            0 : reset,
+            1 : lambda self: self.bold = True,
+            4 : lambda self: self.underline = True,
+            5 : lambda self: self.blink = True,
+            7 : lambda self: self.inverse = True,
+            30 : lambda self: self.fg = 'black',
+            31 : lambda self: self.fg = 'red',
+            32 : lambda self: self.fg = 'green',
+            33 : lambda self: self.fg = 'yellow',
+            34 : lambda self: self.fg = 'blue',
+            35 : lambda self: self.fg = 'magenta',
+            36 : lambda self: self.fg = 'cyan',
+            37 : lambda self: self.fg = 'white',
+            40 : lambda self: self.bg = 'black',
+            41 : lambda self: self.bg = 'red',
+            42 : lambda self: self.bg = 'green',
+            43 : lambda self: self.bg = 'yellow',
+            44 : lambda self: self.bg = 'blue',
+            45 : lambda self: self.bg = 'magenta',
+            46 : lambda self: self.bg = 'cyan',
+            47 : lambda self: self.bg = 'white',
+            }
+
+
+class Character (object):
+    def __init__(self, character, properties):
+        self.character = character
+        self.properties = properties
+    def __str__(self):
+        # TODO
+        self.character
+
+
+class Screen (object):
+    def __init__(self):
+        self.pos = [0,0]
+        self.current_properties = None
+    def add(self, character):
+        for c in s:
+            if c != '\033':
+                self.append(c)
+
+    def output(self):
+        raise NotImplementedError()
+
+
+def vt100_to_html(s):
+    return Screen(s).output()
+
+
+def process(infilename, outfilename = None):
+    if outfilename is None:
+        if infilename == '-':
+            outfilename = '-'
+        else:
+            outfilename = infilename + EXT
+
+    # Slurp the input
+    if infilename == '-':
+        infile = sys.stdin
+    else:
+        infile = open(infilename, 'rb')
+    input = infile.read()
+    if infile is not sys.stdin:
+        infile.close()
+
+    output = vt100_to_html(input)
+
+    # Write all the output
+    if outfilename == '-':
+        outfile = sys.stdout
+    else:
+        outfile = open(outfilename, 'wb')
+    outfile.write(output)
+    if outfile is not sys.stdout:
+        outfile.close()
+
+
+def main(argv):
+    if argv:
+        for filename in sys.argv[1:]:
+            main(filename)
+    else:
+        main('-')
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
