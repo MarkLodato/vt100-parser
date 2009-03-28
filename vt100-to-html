@@ -4,7 +4,6 @@ import sys, os
 
 EXT = '.html'
 
-CONTROL_CHAR = 
 NUL = '\000'    # '\0'
 SOH = '\001'    # (start of heading)
 STX = '\002'    # (start of text)
@@ -117,25 +116,43 @@ class Screen (object):
 
     BEL = todo
     def BS(self,c): self.move(0, -1)
-    def HT(self,c): self.move(0, 8-(self.pos[1]%8))
+    def HT(self,c): self.move(0, 8-(self.pos[1]%8)) # TODO implement correctly
     def LF(self,c): self.move(1, 0)
     VT = LF
     FF = LF
     def CR (self,c): self.move(0, -self.pos[1])
 
-    # The following are implemented in xterm but not here (probably never):
-    # Character set stuff, probably will never be implemetned
+    # The following are all character stuff set, probably can safely ignore
     SCS_designate_G0 = ignored
     SCS_designate_G1 = ignored
     SCS_designate_G2 = ignored
     SCS_designate_G3 = ignored
-    LS1 = ignored       # SO in xterm.seq
     LS0 = ignored       # SI in xterm.seq
-    DECALN = ignored
+    LS1 = ignored       # SO in xterm.seq
+    LS2 = ignored
+    LS3 = ignored
+    SS2 = ignored
+    SS3 = ignored
+    S7C1T = ignored
+    C8C1T = ignored
 
-    # The following are implemented in xterm but not here (yet):
+    # The following we may want to implement
+    DECALN = ignored
     DECSC = ignored
     DECRC = ignored
+
+    # The following need not be implemented, I don't think, because we are not
+    # actually accepting input from the user.
+    DECPAM = ignored
+    DECPNM = ignored
+
+    # Will probably want to implement the following.
+    IND = CR # TODO scroll
+    def NEL(self,c):
+        self.CR(c)
+        self.LF(c)
+    HTS = ignored # TODO
+    RI = ignored # TODO
 
 
 
