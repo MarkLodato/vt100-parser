@@ -4,58 +4,154 @@ import sys, os
 
 EXT = '.html'
 
+CONTROL_CHAR = 
+NUL = '\000'    # '\0'
+SOH = '\001'    # (start of heading)
+STX = '\002'    # (start of text)
+ETX = '\003'    # (end of text)
+EOT = '\004'    # (end of transmission)
+ENQ = '\005'    # (enquiry)
+ACK = '\006'    # (acknowledge)
+BEL = '\007'    # '\a' (bell)
+BS  = '\010'    # '\b' (backspace)
+HT  = '\011'    # '\t' (horizontal tab)
+LF  = '\012'    # '\n' (new line)
+VT  = '\013'    # '\v' (vertical tab)
+FF  = '\014'    # '\f' (form feed)
+CR  = '\015'    # '\r' (carriage ret)
+SO  = '\016'    # (shift out)
+SI  = '\017'    # (shift in)
+DLE = '\020'    # (data link escape)
+DC1 = '\021'    # (device control 1)
+DC2 = '\022'    # (device control 2)
+DC3 = '\023'    # (device control 3)
+DC4 = '\024'    # (device control 4)
+NAK = '\025'    # (negative ack.)
+SYN = '\026'    # (synchronous idle)
+ETB = '\027'    # (end of trans. blk)
+CAN = '\030'    # (cancel)
+EM  = '\031'    # (end of medium)
+SUB = '\032'    # (substitute)
+ESC = '\033'    # (escape)
+FS  = '\034'    # (file separator)
+GS  = '\035'    # (group separator)
+RS  = '\036'    # (record separator)
+US  = '\037'    # (unit separator)
+SPACE = ' '
 
-BOLD      = 1
-UNDERLINE = 2
-BLINK     = 4
-INVERSE   = 8
-FG        = 0xf0
-FG_SET    = 0x80
-BG        = 0xf00
-BG_SET    = 0x800
-BLACK     = 0
-RED       = 1
-GREEN     = 2
-YELLOW    = 3
-BLUE      = 4
-MAGENTA   = 5
-CYAN      = 6
-WHITE     = 7
-FG_BLACK   = 0x80
-FG_RED     = 0x90
-FG_GREEN   = 0xa0
-FG_YELLOW  = 0xb0
-FG_BLUE    = 0xc0
-FG_MAGENTA = 0xd0
-FG_CYAN    = 0xe0
-FG_WHITE   = 0xf0
-BG_BLACK   = 0x800
-BG_RED     = 0x900
-BG_GREEN   = 0xa00
-BG_YELLOW  = 0xb00
-BG_BLUE    = 0xc00
-BG_MAGENTA = 0xd00
-BG_CYAN    = 0xe00
-BG_WHITE   = 0xf00
 
 
-class Character (object):
-    def __init__(self, character, properties):
-        self.character = character
-        self.properties = properties
-    def __str__(self):
-        # TODO
-        self.character
+ATTRIBUTES  = 0xffff0000
+BOLD        = 0x00010000
+UNDERLINE   = 0x00020000
+BLINK       = 0x00040000
+INVERSE     = 0x00080000
+FG_POS      = 20
+FG_POS      = 24
+FG          = 0xf << FG_POS
+BG          = 0xf << BG_POS
+BLACK       = 0
+RED         = 1
+GREEN       = 2
+YELLOW      = 3
+BLUE        = 4
+MAGENTA     = 5
+CYAN        = 6
+WHITE       = 7
+COLOR_SET   = 8
+FG_BLACK    = (BLACK   | COLOR_SET) << FG_POS
+FG_RED      = (RED     | COLOR_SET) << FG_POS
+FG_GREEN    = (GREEN   | COLOR_SET) << FG_POS
+FG_YELLOW   = (YELLOW  | COLOR_SET) << FG_POS
+FG_BLUE     = (BLUE    | COLOR_SET) << FG_POS
+FG_MAGENTA  = (MAGENTA | COLOR_SET) << FG_POS
+FG_CYAN     = (CYAN    | COLOR_SET) << FG_POS
+FG_WHITE    = (WHITE   | COLOR_SET) << FG_POS
+BG_BLACK    = (BLACK   | COLOR_SET) << BG_POS
+BG_RED      = (RED     | COLOR_SET) << BG_POS
+BG_GREEN    = (GREEN   | COLOR_SET) << BG_POS
+BG_YELLOW   = (YELLOW  | COLOR_SET) << BG_POS
+BG_BLUE     = (BLUE    | COLOR_SET) << BG_POS
+BG_MAGENTA  = (MAGENTA | COLOR_SET) << BG_POS
+BG_CYAN     = (CYAN    | COLOR_SET) << BG_POS
+BG_WHITE    = (WHITE   | COLOR_SET) << BG_POS
+
+
+M_NORMAL, M_ESCAPE, IGNORE_TEXT, PM, APC, DCS, CSR, ACCEPT_CHAR = range(5)
 
 
 class Screen (object):
     def __init__(self):
+        self.width = 80
+        self.height = 24
         self.pos = [0,0]
-        self.current_properties = None
-    def add(self, character):
-        for c in s:
-            if c != '\033':
-                self.append(c)
+        self.current_attributes = 0
+        self.history = []
+        self.screen = [[]]
+        self.add = self.add_normal
+
+    def move(self, down, right):
+        self.pos[0] += max(-self.pos[0], down)
+        self.pos[1] += max(-self.pos[1], right)
+        if self.pos[0] > self.height:
+            extra = self.pos[0] - self.height
+            self.history.extend( self.screen[:extra] )
+            del self.screen[:extra]
+
+    def __setattr__(self, pos, value):
+        if pos[0] >= len(self.screen):
+            if pos[0] > self.height:
+                self.history.extend( self.screen[]) # TODO
+
+
+    def ignored(self, c):
+        pass
+
+    def literal_insert(self, c):
+        self[self.pos] = c | self.current_attributes
+        self.pos[1] += 1
+
+
+    todo = ignored
+
+
+    BEL = todo
+    def BS(self,c): self.move(0, -1)
+    def HT(self,c): self.move(0, 8-(self.pos[1]%8))
+    def LF(self,c): self.move(1, 0)
+    VT = LF
+    FF = LF
+    def CR (self,c): self.move(0, -self.pos[1])
+
+    # The following are implemented in xterm but not here (probably never):
+    # Character set stuff, probably will never be implemetned
+    SCS_designate_G0 = ignored
+    SCS_designate_G1 = ignored
+    SCS_designate_G2 = ignored
+    SCS_designate_G3 = ignored
+    LS1 = ignored       # SO in xterm.seq
+    LS0 = ignored       # SI in xterm.seq
+    DECALN = ignored
+
+    # The following are implemented in xterm but not here (yet):
+    DECSC = ignored
+    DECRC = ignored
+
+
+
+    def add_normal(self, c):
+        if c == ESC:
+            self.add = self.add_escape
+        else:
+
+    def add(self, string):
+        mode = self.mode
+        for c in string:
+            if mode == M_NORMAL:
+            if mode == '
+                if c != ESC:
+                    self.append(c)
+        self.mode = mode
 
     def output(self):
         raise NotImplementedError()
