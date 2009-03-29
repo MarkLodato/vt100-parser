@@ -4,41 +4,6 @@ import sys, os
 
 EXT = '.html'
 
-NUL = '\000'    # '\0'
-SOH = '\001'    # (start of heading)
-STX = '\002'    # (start of text)
-ETX = '\003'    # (end of text)
-EOT = '\004'    # (end of transmission)
-ENQ = '\005'    # (enquiry)
-ACK = '\006'    # (acknowledge)
-BEL = '\007'    # '\a' (bell)
-BS  = '\010'    # '\b' (backspace)
-HT  = '\011'    # '\t' (horizontal tab)
-LF  = '\012'    # '\n' (new line)
-VT  = '\013'    # '\v' (vertical tab)
-FF  = '\014'    # '\f' (form feed)
-CR  = '\015'    # '\r' (carriage ret)
-SO  = '\016'    # (shift out)
-SI  = '\017'    # (shift in)
-DLE = '\020'    # (data link escape)
-DC1 = '\021'    # (device control 1)
-DC2 = '\022'    # (device control 2)
-DC3 = '\023'    # (device control 3)
-DC4 = '\024'    # (device control 4)
-NAK = '\025'    # (negative ack.)
-SYN = '\026'    # (synchronous idle)
-ETB = '\027'    # (end of trans. blk)
-CAN = '\030'    # (cancel)
-EM  = '\031'    # (end of medium)
-SUB = '\032'    # (substitute)
-ESC = '\033'    # (escape)
-FS  = '\034'    # (file separator)
-GS  = '\035'    # (group separator)
-RS  = '\036'    # (record separator)
-US  = '\037'    # (unit separator)
-SPACE = ' '
-
-
 
 ATTRIBUTES  = 0xffff0000
 BOLD        = 0x00010000
@@ -98,61 +63,173 @@ class Screen (object):
             del self.screen[:extra]
 
     def __setattr__(self, pos, value):
-        if pos[0] >= len(self.screen):
-            if pos[0] > self.height:
+        r,c = pos
+        if r >= len(self.screen):
+            if r > self.height:
                 self.history.extend( self.screen[]) # TODO
 
 
-    def ignored(self, c):
+    def ignore(self, c):
         pass
 
-    def literal_insert(self, c):
-        self[self.pos] = c | self.current_attributes
+    def ignore2(self, c):
+        c.next()
+
+    def ignore_to_ctrl_g(self, c):
+        # Xterm also accepts ESC \, so we do too
+        # XXX xterm still interprets other escapes in this ignored message
+        x = None
+        y = c.next()
+        while not (y == '\007' or (x == '\033' and y == '\\')):
+            x = y
+            y = c.next()
+
+    def ignore_to_esc_backslash(self, c):
+        # XXX xterm still interprets other escapes in this ignored message
+        x = c.next()
+        y = c.next()
+        while not (x == '\033' and y == '\\'):
+            x = y
+            y = c.next()
+
+    def insert(self, c):
+        self[self.pos] = ord(c) | self.current_attributes
         self.pos[1] += 1
 
 
-    todo = ignored
+    def BEL(self,c):
+        # todo?
+        pass
 
+    def BS(self,c):
+        self.move(0, -1)
 
-    BEL = todo
-    def BS(self,c): self.move(0, -1)
-    def HT(self,c): self.move(0, 8-(self.pos[1]%8)) # TODO implement correctly
-    def LF(self,c): self.move(1, 0)
+    def HT(self,c):
+        # TODO implement correctly
+        self.move(0, 8-(self.pos[1]%8))
+
+    def LF(self,c):
+        self.move(1, 0)
+
     VT = LF
     FF = LF
-    def CR (self,c): self.move(0, -self.pos[1])
 
-    # The following are all character stuff set, probably can safely ignore
-    SCS_designate_G0 = ignored
-    SCS_designate_G1 = ignored
-    SCS_designate_G2 = ignored
-    SCS_designate_G3 = ignored
-    LS0 = ignored       # SI in xterm.seq
-    LS1 = ignored       # SO in xterm.seq
-    LS2 = ignored
-    LS3 = ignored
-    SS2 = ignored
-    SS3 = ignored
-    S7C1T = ignored
-    C8C1T = ignored
+    def CR(self,c):
+        self.move(0, -self.pos[1])
 
-    # The following we may want to implement
-    DECALN = ignored
-    DECSC = ignored
-    DECRC = ignored
+    SI = ignore     # LS0
+    SO = ignore     # LS1
 
-    # The following need not be implemented, I don't think, because we are not
-    # actually accepting input from the user.
-    DECPAM = ignored
-    DECPNM = ignored
-
-    # Will probably want to implement the following.
-    IND = CR # TODO scroll
     def NEL(self,c):
         self.CR(c)
         self.LF(c)
-    HTS = ignored # TODO
-    RI = ignored # TODO
+
+    # Will probably want to implement the following.
+    IND = CR # TODO scrolling?
+    HTS = ignore # TODO
+    RI = ignore # TODO
+
+
+    def ESC_EXT(self,c):
+        start = ''
+        x = c.next()
+        a = ''
+        if x in '?':
+            start = x
+            x = c.next()
+        while x in '0123456789;':
+            a += x
+            x = c.next()
+        a = a.split(';')
+        code = start + x
+        try:
+            f = ESC_EXT_SEQ[code]
+        except KeyError:
+            pass
+        else:
+            f(self, a)
+
+
+    # List of escape sequences that are ignored and how many characters to
+    # ignore.
+    ESC_SEQ = {
+            '(' : ignore2,  # SCS - Designate G0 font
+            ')' : ignore2,  # SCS - Designate G1 font
+            '*' : ignore2,  # SCS - Designate G2 font
+            '+' : ignore2,  # SCS - Designate G3 font
+            ' ' : ignore2,  # S7C1T / C8C1T
+            '#' : ignore2,  # DECALN
+            'n' : ignore,   # LS2
+            'o' : ignore,   # LS3
+            'N' : ignore,   # SS2
+            'O' : ignore,   # SS3
+            '7' : ignore,   # DECSC
+            '8' : ignore,   # DECRC
+            '=' : ignore,   # DECPAM
+            '>' : ignore,   # DECPNM
+            'D' : IND,
+            'E' : NEL,
+            'H' : HTS,
+            'M' : RI,
+            'P' : ignore_to_esc_backslash,  # DECUDK
+            'Z' : ignore,                   # DECID
+            'c' : RIS,
+            '[' : ESC_EXT,
+            ']' : ignore_to_ctrl_g,         # set xterm parameters
+            '^' : ignore_to_esc_backslash,  # PM
+            # TODO
+        }
+
+    def ESC(self, c):
+        c = c.next()
+        # the following are ignored
+        if c[1] in '()*+ #':
+            return 3
+        if c[1] == 'noNO':
+            return 2
+
+        if c[1] == '7':
+            # TODO save cursor
+            return 2
+        if c[1] == '8':
+            # TODO restore cursor
+            return 2
+
+
+    interpet = {
+            '\000' : ignore     # NUL  '\0'
+            '\001' : ignore     # SOH  (start of heading)
+            '\002' : ignore     # STX  (start of text)
+            '\003' : ignore     # ETX  (end of text)
+            '\004' : ignore     # EOT  (end of transmission)
+            '\005' : ignore     # ENQ  (enquiry)
+            '\006' : ignore     # ACK  (acknowledge)
+            '\007' : BEL        # BEL  '\a' (bell)
+            '\010' : ignore     # BS   '\b' (backspace)
+            '\011' : HT         # HT   '\t' (horizontal tab)
+            '\012' : ignore     # LF   '\n' (new line)
+            '\013' : VT         # VT   '\v' (vertical tab)
+            '\014' : FF         # FF   '\f' (form feed)
+            '\015' : CR         # CR   '\r' (carriage ret)
+            '\016' : SO         # SO   (shift out)
+            '\017' : SI         # SI   (shift in)
+            '\020' : ignore     # DLE  (data link escape)
+            '\021' : ignore     # DC1  (device control 1)
+            '\022' : ignore     # DC2  (device control 2)
+            '\023' : ignore     # DC3  (device control 3)
+            '\024' : ignore     # DC4  (device control 4)
+            '\025' : ignore     # NAK  (negative ack.)
+            '\026' : ignore     # SYN  (synchronous idle)
+            '\027' : ignore     # ETB  (end of trans. blk)
+            '\030' : ignore     # CAN  (cancel)
+            '\031' : ignore     # EM   (end of medium)
+            '\032' : ignore     # SUB  (substitute)
+            '\033' : ESC        # ESC  (escape)
+            '\034' : ignore     # FS   (file separator)
+            '\035' : ignore     # GS   (group separator)
+            '\036' : ignore     # RS   (record separator)
+            '\037' : ignore     # US   (unit separator)
+            }
 
 
 
