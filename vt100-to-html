@@ -44,7 +44,7 @@ BG_WHITE    = (WHITE   | COLOR_SET) << BG_POS
 M_NORMAL, M_ESCAPE, IGNORE_TEXT, PM, APC, DCS, CSR, ACCEPT_CHAR = range(5)
 
 
-class Screen (object):
+class Terminal (object):
     def __init__(self):
         self.width = 80
         self.height = 24
@@ -67,6 +67,203 @@ class Screen (object):
         if r >= len(self.screen):
             if r > self.height:
                 self.history.extend( self.screen[]) # TODO
+
+
+    NUL = None
+    SOH = None
+    STX = None
+    ETX = None
+    EOT = None
+    ENQ = None
+    ACK = None
+    BEL = None
+    BS  = None
+    HT  = None
+    LF  = None
+    VT  = None
+    FF  = None
+    CR  = None
+    SO  = None
+    SI  = None
+
+    DLE = None
+    DC1 = None
+    DC2 = None
+    DC3 = None
+    DC4 = None
+    NAK = None
+    SYN = None
+    ETB = None
+    CAN = None
+    EM  = None
+    SUB = None
+    ESC = None
+    FS  = None
+    GS  = None
+    RS  = None
+    US  = None
+
+
+    C0 = [
+        "NUL",  #  0x00  ^@  '\0'
+        "SOH",  #  0x01  ^A  start of heading
+        "STX",  #  0x02  ^B  start of text
+        "ETX",  #  0x03  ^C  end of text
+        "EOT",  #  0x04  ^D  end of transmission
+        "ENQ",  #  0x05  ^E  enquiry
+        "ACK",  #  0x06  ^F  acknowledge
+        "BEL",  #  0x07  ^G  '\a' bell
+        "BS",   #  0x08  ^H  '\b' backspace
+        "HT",   #  0x09  ^I  '\t' horizontal tab
+        "LF",   #  0x0a  ^J  '\n' new line
+        "VT",   #  0x0b  ^K  '\v' vertical tab
+        "FF",   #  0x0c  ^L  '\f' form feed
+        "CR",   #  0x0d  ^M  '\r' carriage ret
+        "SO",   #  0x0e  ^N  shift out            (LS1)
+        "SI",   #  0x0f  ^O  shift in             (LS0)
+        "DLE",  #  0x10  ^P  data link escape
+        "DC1",  #  0x11  ^Q  device control 1
+        "DC2",  #  0x12  ^R  device control 2
+        "DC3",  #  0x13  ^S  device control 3
+        "DC4",  #  0x14  ^T  device control 4
+        "NAK",  #  0x15  ^U  negative ack.
+        "SYN",  #  0x16  ^V  synchronous idle
+        "ETB",  #  0x17  ^W  end of trans. blk
+        "CAN",  #  0x18  ^X  cancel
+        "EM",   #  0x19  ^Y  end of medium
+        "SUB",  #  0x1a  ^Z  substitute
+        "ESC",  #  0x1b  ^[  escape
+        "FS",   #  0x1c  ^\  file separator       (IS4)
+        "GS",   #  0x1d  ^]  group separator      (IS3)
+        "RS",   #  0x1e  ^^  record separator     (IS2)
+        "US",   #  0x1f  ^_  unit separator       (IS1)
+    ]
+
+    C1 = [
+        "reserved",
+        "reserved",
+        "BPH",
+        "NBH",
+        "reserved",
+        "NEL",
+        "SSA",
+        "ESA",
+        "HTS",
+        "HTJ",
+        "VTS",
+        "PLD",
+        "PLU",
+        "RI",
+        "SS2",
+        "SS3",
+        "DCS",
+        "PU1",
+        "PU2",
+        "STS",
+        "CCH",
+        "MW",
+        "SPA",
+        "EPA",
+        "SOS",
+        "reserved",
+        "SCI",
+        "CSI",
+        "ST",
+        "OSC",
+        "PM",
+        "APC",
+    ]
+
+    icf = [
+        "DMI",
+        "INT",
+        "EMI",
+        "RIS",
+        "CMD",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "LS2",
+        "LS3",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "reserved",
+        "LS3R",
+        "LS2R",
+        "LS1R",
+        "reserved",
+    ]
+
+
+    def call(self, name, *args):
+        f = getattr(self, name, None)
+        if f is not None:
+            f(*args)
+
+
+    def process(self, input):
+        input = iter(input)
+        for c in input:
+            # normal glyph
+            if c >= 0x20:
+                self.output(c)
+
+            # C0 (except Escape)
+            elif c != 0x1b:
+                name = self.C0[c]
+                self.call(name, (c,), input)
+
+            # Escape
+            else:
+                n = input.next()
+                seq = [c,n]
+                intermediate = []
+
+                while n < 0x30:
+                    if n < 0x20:
+                        self.call("reserved", seq, input)
+                    n = input.next()
+                    intermediate.append(n)
+                seq.extend(intermediate)
+
+                # Control sequence
+                if n == 0x5b:
+                    # TODO
+                    pass
+
+                # Control string
+                elif n in self.control_strings:
+                    f
+
+                # C1
+                else:
+                elif 0x40 <= n <= 0x5f:
+                    name = self.C1[n-0x40]
+                    self.call(name, seq, input)
+
+                # Independent Control Functions
+                elif 0x60 <= n <= 0x7f:
+                    name = self.icf[n-0x60]
+                    self.call(name, seq, input)
+
+                elif d
+
+
 
 
     def ignore(self, c):
