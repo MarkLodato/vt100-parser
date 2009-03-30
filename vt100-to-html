@@ -41,7 +41,6 @@ BG_CYAN     = (CYAN    | COLOR_SET) << BG_POS
 BG_WHITE    = (WHITE   | COLOR_SET) << BG_POS
 
 
-M_NORMAL, M_ESCAPE, IGNORE_TEXT, PM, APC, DCS, CSR, ACCEPT_CHAR = range(5)
 
 
 class Terminal (object):
@@ -68,40 +67,6 @@ class Terminal (object):
             if r > self.height:
                 self.history.extend( self.screen[]) # TODO
 
-
-    NUL = None
-    SOH = None
-    STX = None
-    ETX = None
-    EOT = None
-    ENQ = None
-    ACK = None
-    BEL = None
-    BS  = None
-    HT  = None
-    LF  = None
-    VT  = None
-    FF  = None
-    CR  = None
-    SO  = None
-    SI  = None
-
-    DLE = None
-    DC1 = None
-    DC2 = None
-    DC3 = None
-    DC4 = None
-    NAK = None
-    SYN = None
-    ETB = None
-    CAN = None
-    EM  = None
-    SUB = None
-    ESC = None
-    FS  = None
-    GS  = None
-    RS  = None
-    US  = None
 
 
     C0 = [
@@ -139,75 +104,61 @@ class Terminal (object):
         "US",   #  0x1f  ^_  unit separator       (IS1)
     ]
 
-    C1 = [
-        "reserved",
-        "reserved",
-        "BPH",
-        "NBH",
-        "reserved",
-        "NEL",
-        "SSA",
-        "ESA",
-        "HTS",
-        "HTJ",
-        "VTS",
-        "PLD",
-        "PLU",
-        "RI",
-        "SS2",
-        "SS3",
-        "DCS",
-        "PU1",
-        "PU2",
-        "STS",
-        "CCH",
-        "MW",
-        "SPA",
-        "EPA",
-        "SOS",
-        "reserved",
-        "SCI",
-        "CSI",
-        "ST",
-        "OSC",
-        "PM",
-        "APC",
-    ]
+    escapes = {
+        # (0x40,)
+        # (0x41,)
+        (0x42,) : "BPH",
+        (0x43,) : "NBH",
+        # (0x44,)
+        (0x45,) : "NEL",
+        (0x46,) : "SSA",
+        (0x47,) : "ESA",
+        (0x48,) : "HTS",
+        (0x49,) : "HTJ",
+        (0x4a,) : "VTS",
+        (0x4b,) : "PLD",
+        (0x4c,) : "PLU",
+        (0x4d,) : "RI",
+        (0x4e,) : "SS2",
+        (0x4f,) : "SS3",
+        (0x50,) : "DCS",
+        (0x51,) : "PU1",
+        (0x52,) : "PU2",
+        (0x53,) : "STS",
+        (0x54,) : "CCH",
+        (0x55,) : "MW",
+        (0x56,) : "SPA",
+        (0x57,) : "EPA",
+        (0x58,) : "SOS",
+        # (0x59,)
+        (0x5a,) : "SCI",
+        (0x5b,) : "CSI",
+        (0x5c,) : "ST",
+        (0x5d,) : "OSC",
+        (0x5e,) : "PM",
+        (0x5f,) : "APC",
+        (0x60,) : "DMI",
+        (0x61,) : "INT",
+        (0x62,) : "EMI",
+        (0x63,) : "RIS",
+        (0x64,) : "CMD",
+        # (0x65,)
+        # (0x66,)
+        # (0x67,)
+        # (0x68,)
+        # (0x69,)
+        # (0x6a,)
+        # (0x6b,)
+        # (0x6c,)
+        # (0x6d,)
+        (0x6e,) : "LS2",
+        (0x6f,) : "LS3",
+        (0x7c,) : "LS3R",
+        (0x7d,) : "LS2R",
+        (0x7e,) : "LS1R",
+        # (0x7f,)
+    }
 
-    icf = [
-        "DMI",
-        "INT",
-        "EMI",
-        "RIS",
-        "CMD",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "LS2",
-        "LS3",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "reserved",
-        "LS3R",
-        "LS2R",
-        "LS1R",
-        "reserved",
-    ]
 
 
     def call(self, name, *args):
@@ -219,84 +170,103 @@ class Terminal (object):
     def process(self, input):
         input = iter(input)
         for c in input:
-            # normal glyph
             if c >= 0x20:
                 self.output(c)
-
-            # C0 (except Escape)
-            elif c != 0x1b:
+            else:
                 name = self.C0[c]
                 self.call(name, (c,), input)
 
-            # Escape
-            else:
-                n = input.next()
-                seq = [c,n]
-                intermediate = []
 
-                while n < 0x30:
-                    if n < 0x20:
-                        self.call("reserved", seq, input)
-                    n = input.next()
-                    intermediate.append(n)
-                seq.extend(intermediate)
+    def ESC(self, seq_in, input):
+        seq = list(seq_in)
+        if len(seq) == 1:
+            n = input.next()
+        else:
+            n = seq[-1]
+        seq.append(n)
+        intermediate = []
 
-                # Control sequence
-                if n == 0x5b:
-                    # TODO
-                    pass
-
-                # Control string
-                elif n in self.control_strings:
-                    f
-
-                # C1
+        # Interpret the intermediate characters.
+        while n < 0x30:
+            if n < 0x20:
+                # Embedded escape sequence; ESC, CAN, SUB end the current one.
+                name = self.C0.get(n)
+                if name == "ESC":
+                    return self.call(name, (n,), input)
+                if name in ("CAN", "SUB"):
+                    return self.call(name, seq, input)
                 else:
-                elif 0x40 <= n <= 0x5f:
-                    name = self.C1[n-0x40]
+                    # The standards do not define what to do if any other
+                    # control character is within the escape sequence.  Xterm
+                    # just processes the escape recursively, so that's what we
+                    # do here.
+                    self.call(name, (n,), input)
+            intermediate.append(n)
+            n = input.next()
+            seq.append(n)
+
+        code = tuple([n] + intermediate)
+        name = self.escapes.get(code)
+        self.call(name, seq, input)
+
+
+    # -------------------- Control String Functions --------------------
+
+    def read_control_string(self, input, allow_BEL = False):
+        """Read the control string and return the result as a list.  If the
+        control string was cancelled with SUB, return None."""
+        self.finished_reading_control_string = False
+        out = []
+        while True:
+            n = input.next()
+            if n < 0x20:
+                name = self.C0[n]
+                seq = [n]
+                if name == "SUB":
+                    # cancel
                     self.call(name, seq, input)
-
-                # Independent Control Functions
-                elif 0x60 <= n <= 0x7f:
-                    name = self.icf[n-0x60]
+                    return None
+                elif allow_BEL and name == "BEL":
+                    # finish
+                    break
+                elif name == "ESC":
+                    p = input.next()
+                    if p == 0x5c:   # ST - string terminator
+                        # finish
+                        break
+                    else:
+                        # call the embedded escape sequence
+                        seq.append(p)
+                        self.call(name, seq, input)
+                        # Cancel if we read another control string
+                        if self.finished_reading_control_string:
+                            return None
+                else:
+                    # call the embedded control
                     self.call(name, seq, input)
+            else:
+                out.append(n)
+        self.finished_reading_control_string = True
+        return out
 
-                elif d
+    
+    def APC(self, seq_in, input):
+        self.read_control_string(input)
 
+    def DCS(self, seq_in, input):
+        self.read_control_string(input)
 
+    def OSC(self, seq_in, input):
+        self.read_control_string(input, True)
 
+    def SOS(self, seq_in, input):
+        self.read_control_string(input)
 
-    def ignore(self, c):
-        pass
-
-    def ignore2(self, c):
-        c.next()
-
-    def ignore_to_ctrl_g(self, c):
-        # Xterm also accepts ESC \, so we do too
-        # XXX xterm still interprets other escapes in this ignored message
-        x = None
-        y = c.next()
-        while not (y == '\007' or (x == '\033' and y == '\\')):
-            x = y
-            y = c.next()
-
-    def ignore_to_esc_backslash(self, c):
-        # XXX xterm still interprets other escapes in this ignored message
-        x = c.next()
-        y = c.next()
-        while not (x == '\033' and y == '\\'):
-            x = y
-            y = c.next()
-
-    def insert(self, c):
-        self[self.pos] = ord(c) | self.current_attributes
-        self.pos[1] += 1
+    def PM(self, seq_in, input):
+        self.read_control_string(input)
 
 
-    def BEL(self,c):
-        # todo?
-        pass
+
 
     def BS(self,c):
         self.move(0, -1)
@@ -327,125 +297,6 @@ class Terminal (object):
     RI = ignore # TODO
 
 
-    def ESC_EXT(self,c):
-        start = ''
-        x = c.next()
-        a = ''
-        if x in '?':
-            start = x
-            x = c.next()
-        while x in '0123456789;':
-            a += x
-            x = c.next()
-        a = a.split(';')
-        code = start + x
-        try:
-            f = ESC_EXT_SEQ[code]
-        except KeyError:
-            pass
-        else:
-            f(self, a)
-
-
-    # List of escape sequences that are ignored and how many characters to
-    # ignore.
-    ESC_SEQ = {
-            '(' : ignore2,  # SCS - Designate G0 font
-            ')' : ignore2,  # SCS - Designate G1 font
-            '*' : ignore2,  # SCS - Designate G2 font
-            '+' : ignore2,  # SCS - Designate G3 font
-            ' ' : ignore2,  # S7C1T / C8C1T
-            '#' : ignore2,  # DECALN
-            'n' : ignore,   # LS2
-            'o' : ignore,   # LS3
-            'N' : ignore,   # SS2
-            'O' : ignore,   # SS3
-            '7' : ignore,   # DECSC
-            '8' : ignore,   # DECRC
-            '=' : ignore,   # DECPAM
-            '>' : ignore,   # DECPNM
-            'D' : IND,
-            'E' : NEL,
-            'H' : HTS,
-            'M' : RI,
-            'P' : ignore_to_esc_backslash,  # DECUDK
-            'Z' : ignore,                   # DECID
-            'c' : RIS,
-            '[' : ESC_EXT,
-            ']' : ignore_to_ctrl_g,         # set xterm parameters
-            '^' : ignore_to_esc_backslash,  # PM
-            # TODO
-        }
-
-    def ESC(self, c):
-        c = c.next()
-        # the following are ignored
-        if c[1] in '()*+ #':
-            return 3
-        if c[1] == 'noNO':
-            return 2
-
-        if c[1] == '7':
-            # TODO save cursor
-            return 2
-        if c[1] == '8':
-            # TODO restore cursor
-            return 2
-
-
-    interpet = {
-            '\000' : ignore     # NUL  '\0'
-            '\001' : ignore     # SOH  (start of heading)
-            '\002' : ignore     # STX  (start of text)
-            '\003' : ignore     # ETX  (end of text)
-            '\004' : ignore     # EOT  (end of transmission)
-            '\005' : ignore     # ENQ  (enquiry)
-            '\006' : ignore     # ACK  (acknowledge)
-            '\007' : BEL        # BEL  '\a' (bell)
-            '\010' : ignore     # BS   '\b' (backspace)
-            '\011' : HT         # HT   '\t' (horizontal tab)
-            '\012' : ignore     # LF   '\n' (new line)
-            '\013' : VT         # VT   '\v' (vertical tab)
-            '\014' : FF         # FF   '\f' (form feed)
-            '\015' : CR         # CR   '\r' (carriage ret)
-            '\016' : SO         # SO   (shift out)
-            '\017' : SI         # SI   (shift in)
-            '\020' : ignore     # DLE  (data link escape)
-            '\021' : ignore     # DC1  (device control 1)
-            '\022' : ignore     # DC2  (device control 2)
-            '\023' : ignore     # DC3  (device control 3)
-            '\024' : ignore     # DC4  (device control 4)
-            '\025' : ignore     # NAK  (negative ack.)
-            '\026' : ignore     # SYN  (synchronous idle)
-            '\027' : ignore     # ETB  (end of trans. blk)
-            '\030' : ignore     # CAN  (cancel)
-            '\031' : ignore     # EM   (end of medium)
-            '\032' : ignore     # SUB  (substitute)
-            '\033' : ESC        # ESC  (escape)
-            '\034' : ignore     # FS   (file separator)
-            '\035' : ignore     # GS   (group separator)
-            '\036' : ignore     # RS   (record separator)
-            '\037' : ignore     # US   (unit separator)
-            }
-
-
-
-    def add_normal(self, c):
-        if c == ESC:
-            self.add = self.add_escape
-        else:
-
-    def add(self, string):
-        mode = self.mode
-        for c in string:
-            if mode == M_NORMAL:
-            if mode == '
-                if c != ESC:
-                    self.append(c)
-        self.mode = mode
-
-    def output(self):
-        raise NotImplementedError()
 
 
 def vt100_to_html(s):
