@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys, os
+import array
 
 EXT = '.html'
 
@@ -41,6 +42,9 @@ BG_CYAN     = (CYAN    | COLOR_SET) << BG_POS
 BG_WHITE    = (WHITE   | COLOR_SET) << BG_POS
 
 
+
+def _to_code(s):
+    return tuple(ord(c) for c in s)
 
 
 class Terminal (object):
@@ -105,70 +109,70 @@ class Terminal (object):
     ]
 
     escapes = {
-        # (0x40,)
-        # (0x41,)
-        (0x42,) : "BPH",
-        (0x43,) : "NBH",
-        # (0x44,)
-        (0x45,) : "NEL",
-        (0x46,) : "SSA",
-        (0x47,) : "ESA",
-        (0x48,) : "HTS",
-        (0x49,) : "HTJ",
-        (0x4a,) : "VTS",
-        (0x4b,) : "PLD",
-        (0x4c,) : "PLU",
-        (0x4d,) : "RI",
-        (0x4e,) : "SS2",
-        (0x4f,) : "SS3",
-        (0x50,) : "DCS",
-        (0x51,) : "PU1",
-        (0x52,) : "PU2",
-        (0x53,) : "STS",
-        (0x54,) : "CCH",
-        (0x55,) : "MW",
-        (0x56,) : "SPA",
-        (0x57,) : "EPA",
-        (0x58,) : "SOS",
-        # (0x59,)
-        (0x5a,) : "SCI",
-        (0x5b,) : "CSI",
-        (0x5c,) : "ST",
-        (0x5d,) : "OSC",
-        (0x5e,) : "PM",
-        (0x5f,) : "APC",
-        (0x60,) : "DMI",
-        (0x61,) : "INT",
-        (0x62,) : "EMI",
-        (0x63,) : "RIS",
-        (0x64,) : "CMD",
-        # (0x65,)
-        # (0x66,)
-        # (0x67,)
-        # (0x68,)
-        # (0x69,)
-        # (0x6a,)
-        # (0x6b,)
-        # (0x6c,)
-        # (0x6d,)
-        (0x6e,) : "LS2",
-        (0x6f,) : "LS3",
-        # (0x70,)
-        # (0x71,)
-        # (0x72,)
-        # (0x73,)
-        # (0x74,)
-        # (0x75,)
-        # (0x76,)
-        # (0x77,)
-        # (0x78,)
-        # (0x79,)
-        # (0x7a,)
-        # (0x7b,)
-        (0x7c,) : "LS3R",
-        (0x7d,) : "LS2R",
-        (0x7e,) : "LS1R",
-        # (0x7f,)
+        # '@'
+        # 'A'
+        'B' : "BPH",
+        'C' : "NBH",
+        # 'D'
+        'E' : "NEL",
+        'F' : "SSA",
+        'G' : "ESA",
+        'H' : "HTS",
+        'I' : "HTJ",
+        'J' : "VTS",
+        'K' : "PLD",
+        'L' : "PLU",
+        'M' : "RI",
+        'N' : "SS2",
+        'O' : "SS3",
+        'P' : "DCS",
+        'Q' : "PU1",
+        'R' : "PU2",
+        'S' : "STS",
+        'T' : "CCH",
+        'U' : "MW",
+        'V' : "SPA",
+        'W' : "EPA",
+        'X' : "SOS",
+        # 'Y'
+        'Z' : "SCI",
+        '[' : "CSI",
+        '\\' : "ST",
+        ']' : "OSC",
+        '^' : "PM",
+        '_' : "APC",
+        '`' : "DMI",
+        'a' : "INT",
+        'b' : "EMI",
+        'c' : "RIS",
+        'd' : "CMD",
+        # 'e'
+        # 'f'
+        # 'g'
+        # 'h'
+        # 'i'
+        # 'j'
+        # 'k'
+        # 'l'
+        # 'm'
+        'n' : "LS2",
+        'o' : "LS3",
+        # 'p'
+        # 'q'
+        # 'r'
+        # 's'
+        # 't'
+        # 'u'
+        # 'v'
+        # 'w'
+        # 'x'
+        # 'y'
+        # 'z'
+        # '{'
+        '|' : "LS3R",
+        '}' : "LS2R",
+        '~' : "LS1R",
+        # '\x7f'
     }
 
 
@@ -195,8 +199,7 @@ class Terminal (object):
             n = input.next()
         else:
             n = seq[-1]
-        seq.append(n)
-        intermediate = []
+        code = array('B'))
 
         # Interpret the intermediate characters.
         while n < 0x30:
@@ -213,12 +216,13 @@ class Terminal (object):
                     # just processes the escape recursively, so that's what we
                     # do here.
                     self.call(name, (n,), input)
-            intermediate.append(n)
+            else:
+                code.append(n)
             n = input.next()
-            seq.append(n)
+        code.append(n)
+        seq.extend(code)
 
-        code = tuple([n] + intermediate)
-        name = self.escapes.get(code)
+        name = self.escapes.get(code.tostring())
         self.call(name, seq, input)
 
 
@@ -243,7 +247,7 @@ class Terminal (object):
                     break
                 elif name == "ESC":
                     p = input.next()
-                    if p == 0x5c:   # ST - string terminator
+                    if p == ord('\\'):  # ST - string terminator
                         # finish
                         break
                     else:
@@ -278,6 +282,7 @@ class Terminal (object):
         self.read_control_string(input)
 
 
+    # --------------------                          --------------------
 
 
     def BS(self,c):
