@@ -532,7 +532,7 @@ class Terminal (object):
         while n < 0x30:
             if n < 0x20:
                 # Embedded escape sequence; ESC, CAN, SUB end the current one.
-                name = self.C0.get(n)
+                name = self.C0[n]
                 if name == "ESC":
                     return self.call(name, (n,), input)
                 if name in ("CAN", "SUB"):
