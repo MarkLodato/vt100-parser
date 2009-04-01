@@ -109,13 +109,33 @@ class Terminal (object):
     ]
 
     escapes = {
-        # '@'
-        # 'A'
+        ' F' : "S7C1T",     # 7-bit controls
+        ' G' : "S8C1T",     # 8-bit controls
+        ' L' : "ansi_conformance_1",
+        ' M' : "ansi_conformance_2",
+        ' N' : "ansi_conformance_3",
+        '#3' : "DECDHL",    #  DEC double-height line, top half
+        '#4' : "DECDHL",    #  DEC double-height line, bottom half
+        '#5' : "DECSWL",    #  DEC single-width line
+        '#6' : "DECDWL",    #  DEC double-width line
+        '#8' : "DECALN",    #  DEC Screen Alignment Test
+        '%@' : "select_default_charset",
+        '%G' : "select_utf8_charset",
+      # '(C'     Designate G0 Character Set (ISO 2022) ; C = character
+      # ')C'     Designate G1 Character Set (ISO 2022) ; C = character
+      # '*C'     Designate G2 Character Set (ISO 2022) ; C = character
+      # '+C'     Designate G3 Character Set (ISO 2022) ; C = character
+        '7' : "DECSC",      # Save Cursor
+        '8' : "DECRC",      # Restore Cursor
+        '=' : "DECPAM",
+        '>' : "DECPNM",
+      # '@'
+      # 'A'
         'B' : "BPH",
         'C' : "NBH",
-        # 'D'
+        'D' : "IND",
         'E' : "NEL",
-        'F' : "SSA",
+        'F' : "SSA",        # also hpLowerleftBugCompat in xterm
         'G' : "ESA",
         'H' : "HTS",
         'I' : "HTJ",
@@ -134,7 +154,7 @@ class Terminal (object):
         'V' : "SPA",
         'W' : "EPA",
         'X' : "SOS",
-        # 'Y'
+      # 'Y'
         'Z' : "SCI",
         '[' : "CSI",
         '\\' : "ST",
@@ -146,41 +166,193 @@ class Terminal (object):
         'b' : "EMI",
         'c' : "RIS",
         'd' : "CMD",
-        # 'e'
-        # 'f'
-        # 'g'
-        # 'h'
-        # 'i'
-        # 'j'
-        # 'k'
-        # 'l'
-        # 'm'
+      # 'e'
+      # 'f'
+      # 'g'
+      # 'h'
+      # 'i'
+      # 'j'
+      # 'k'
+        'l' : "memory_lock",    # Memory Lock (per HP terminals)
+        'm' : "memory_reset",   # Memory Unlock (per HP terminals)
         'n' : "LS2",
         'o' : "LS3",
-        # 'p'
-        # 'q'
-        # 'r'
-        # 's'
-        # 't'
-        # 'u'
-        # 'v'
-        # 'w'
-        # 'x'
-        # 'y'
-        # 'z'
-        # '{'
+      # 'p'
+      # 'q'
+      # 'r'
+      # 's'
+      # 't'
+      # 'u'
+      # 'v'
+      # 'w'
+      # 'x'
+      # 'y'
+      # 'z'
+      # '{'
         '|' : "LS3R",
         '}' : "LS2R",
         '~' : "LS1R",
         # '\x7f'
     }
 
+    control_sequences = {
+        '@' : "ICH",
+        'A' : "CUU",
+        'B' : "CUD",
+        'C' : "CUF",
+        'D' : "CUB",
+        'E' : "CNL",
+        'F' : "CPL",
+        'G' : "CHA",
+        'H' : "CUP",
+        'I' : "CHT",
+        'J' : "ED",
+        'K' : "EL",
+        'L' : "IL",
+        'M' : "DL",
+        'N' : "EF",
+        'O' : "EA",
+        'P' : "DCH",
+        'Q' : "SSE",
+        'R' : "CPR",
+        'S' : "SU",
+        'T' : "SD",
+        'U' : "NP",
+        'V' : "PP",
+        'W' : "CTC",
+        'X' : "ECH",
+        'Y' : "CVT",
+        'Z' : "CBT",
+        '[' : "SRS",
+        '\\' : "PTX",
+        ']' : "SDS",
+        '^' : "SIMD",
+      # '_'
+        '`' : "HPA",
+        'a' : "HPR",
+        'b' : "REP",
+        'c' : "DA",
+        'd' : "VPA",
+        'e' : "VPR",
+        'f' : "HVP",
+        'g' : "TBC",
+        'h' : "SM",
+        'i' : "MC",
+        'j' : "HPB",
+        'k' : "VPB",
+        'l' : "RM",
+        'm' : "SGR",
+        'n' : "DSR",
+        'o' : "DAQ",
 
+        'p' : "DECSSL",         # Select Set-Up Language
+        'q' : "DECLL",          # Load LEDs
+        'r' : "DECSTBM",        # Set Top and Bottom Margins
+        's' : "DECSLRM",        # Set Left and Right Margins
+        't' : "DECSLPP",        # Set Lines per Physical Page
+        'u' : "DECSHTS",        # Set Horizontal Tabulation Stops
+        'v' : "DECSVTS",        # Set Vertical Tabulation Stops
+        'w' : "DECSHORP",       # Set Horizontal Pitch
+        'x' : "DECREQTPARM",    # Request Terminal Parameters
+        'y' : "DECTST",         # Invoke Confidence Test
+        'z' : "DECVERP",        # Set Vertical Pitch
+      # '{'
+        '|' : "DECTTC",         # Select Transmit Termination Character
+        '}' : "DECPRO",         # Set Protected Field Attributes
+        '~' : "DECFNK",         # Function Key
+
+        ' @' : "SL",
+        ' A' : "SR",
+        ' B' : "GSM",
+        ' C' : "GSS",
+        ' D' : "FNT",
+        ' E' : "TSS",
+        ' F' : "JFY",
+        ' G' : "SPI",
+        ' H' : "QUAD",
+        ' I' : "SSU",
+        ' J' : "PFS",
+        ' K' : "SHS",
+        ' L' : "SVS",
+        ' M' : "IGS",
+      # ' N'
+        ' O' : "IDCS",
+        ' P' : "PPA",
+        ' Q' : "PPR",
+        ' R' : "PPB",
+        ' S' : "SPD",
+        ' T' : "DTA",
+        ' U' : "SHL",
+        ' V' : "SLL",
+        ' W' : "FNK",
+        ' X' : "SPQR",
+        ' Y' : "SEF",
+        ' Z' : "PEC",
+        ' [' : "SSW",
+        ' \\' : "SACS",
+        ' ]' : "SAPV",
+        ' ^' : "STAB",
+        ' _' : "GCC",
+        ' `' : "TATE",
+        ' a' : "TALE",
+        ' b' : "TAC",
+        ' c' : "TCC",
+        ' d' : "TSR",
+        ' e' : "SCO",
+        ' f' : "SRCS",
+        ' g' : "SCS",
+        ' h' : "SLS",
+      # ' i'
+      # ' j'
+        ' k' : "SCP",
+      # ' l'
+      # ' m'
+      # ' n'
+      # ' o'
+
+        ' p' : "DECSSCLS",      # Set Scroll Speed
+        ' q' : "DECSCUSR",      # Set Cursor Style
+        ' r' : "DECSKCV",       # Set Keyclick Volume
+        ' s' : "DECNS",         # New Sheet
+        ' t' : "DECSWBV",       # Set Warning Bell Volume
+        ' u' : "DECSMBV",       # Set Margin Bell Volume
+        ' v' : "DECSLCK",       # Set Lock Key Style
+        ' w' : "DECSITF",       # Select Input Tray Failover
+        ' x' : "DECSDPM",       # Set Duplex Print Mode
+      # ' y'
+        ' z' : "DECVPFS",       # Variable Page Format Select
+        ' {' : "DECSSS",        # Set Sheet Size
+        ' |' : "DECRVEC",       # Draw Relative Vector
+        ' }' : "DECKBD",        # Keyboard Language Selection
+        ' ~' : "DECTME",        # Terminal Mode Emulation
+
+        '!p' : "DECSTR",        # Soft Terminal Reset
+      # '!q'
+      # '!r'
+        '!s' : "DECFIL",        # Right Justification
+      # '!t'
+      # '!u'
+        '!v' : "DECASFC",       # Automatic Sheet Feeder Control
+        '!w' : "DECUND",        # Programmable Underline Character
+        '!x' : "DECPTS",        # Printwheel Table Select
+        '!y' : "DECSS",         # Set Space Size
+      # '!z'
+      # '!{'
+        '!|' : "DECVEC",        # Draw Vector
+        '!}' : "DECFIN",        # Document Finishing
+      # '!~'
+
+    }
+
+
+    call_unknown = None
 
     def call(self, name, *args):
         f = getattr(self, name, None)
         if f is not None:
             f(*args)
+        elif self.call_unknown is not None:
+            self.call_unknown(name, args=args)
 
 
     def process(self, input):
@@ -235,7 +407,9 @@ class Terminal (object):
         out = []
         while True:
             n = input.next()
-            if n < 0x20:
+            if n >= 0x20:
+                out.append(n)
+            else:
                 name = self.C0[n]
                 seq = [n]
                 if name == "SUB":
@@ -260,12 +434,10 @@ class Terminal (object):
                 else:
                     # call the embedded control
                     self.call(name, seq, input)
-            else:
-                out.append(n)
         self.finished_reading_control_string = True
         return out
 
-    
+
     def APC(self, seq_in, input):
         self.read_control_string(input)
 
