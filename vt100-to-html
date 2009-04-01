@@ -109,26 +109,22 @@ class Terminal (object):
     ]
 
     escapes = {
-        ' F' : "S7C1T",     # 7-bit controls
-        ' G' : "S8C1T",     # 8-bit controls
-        ' L' : "ansi_conformance_1",
-        ' M' : "ansi_conformance_2",
-        ' N' : "ansi_conformance_3",
-        '#3' : "DECDHL",    #  DEC double-height line, top half
-        '#4' : "DECDHL",    #  DEC double-height line, bottom half
-        '#5' : "DECSWL",    #  DEC single-width line
-        '#6' : "DECDWL",    #  DEC double-width line
-        '#8' : "DECALN",    #  DEC Screen Alignment Test
-        '%@' : "select_default_charset",
-        '%G' : "select_utf8_charset",
-      # '(C'     Designate G0 Character Set (ISO 2022) ; C = character
-      # ')C'     Designate G1 Character Set (ISO 2022) ; C = character
-      # '*C'     Designate G2 Character Set (ISO 2022) ; C = character
-      # '+C'     Designate G3 Character Set (ISO 2022) ; C = character
+      # '0'
+      # '1'
+      # '2'
+      # '3'
+      # '4'
+      # '5'
+      # '6'
         '7' : "DECSC",      # Save Cursor
         '8' : "DECRC",      # Restore Cursor
+      # '9'
+      # ':'
+      # ';'
+      # '<'
         '=' : "DECPAM",
         '>' : "DECPNM",
+      # '?'
       # '@'
       # 'A'
         'B' : "BPH",
@@ -192,7 +188,24 @@ class Terminal (object):
         '|' : "LS3R",
         '}' : "LS2R",
         '~' : "LS1R",
-        # '\x7f'
+      # '\x7f'
+
+        ' F' : "S7C1T",     # 7-bit controls
+        ' G' : "S8C1T",     # 8-bit controls
+        ' L' : "ansi_conformance_1",
+        ' M' : "ansi_conformance_2",
+        ' N' : "ansi_conformance_3",
+        '#3' : "DECDHL",    #  DEC double-height line, top half
+        '#4' : "DECDHL",    #  DEC double-height line, bottom half
+        '#5' : "DECSWL",    #  DEC single-width line
+        '#6' : "DECDWL",    #  DEC double-width line
+        '#8' : "DECALN",    #  DEC Screen Alignment Test
+        '%@' : "select_default_charset",
+        '%G' : "select_utf8_charset",
+      # '(C'     Designate G0 Character Set (ISO 2022) ; C = character
+      # ')C'     Designate G1 Character Set (ISO 2022) ; C = character
+      # '*C'     Designate G2 Character Set (ISO 2022) ; C = character
+      # '+C'     Designate G3 Character Set (ISO 2022) ; C = character
     }
 
     control_sequences = {
@@ -342,6 +355,148 @@ class Terminal (object):
         '!}' : "DECFIN",        # Document Finishing
       # '!~'
 
+        '"p' : "DECSCL",        # Set Conformance Level
+        '"q' : "DECSCA",        # Select Character Attributes
+      # '"r'
+        '"s' : "DECPWA",        # Page Width Alignment
+        '"t' : "DECSRFR",       # Select Refresh Rate
+        '"u' : "DECSTRL",       # Set Transmit Rate Limit
+        '"v' : "DECRQDE",       # Request Device Extent
+        '"w' : "DECRPDE",       # Report Device Extent
+        '"x' : "DECFCR",        # Font Configuration Request
+      # '"y'
+        '"z' : "DECDEN",        # Select Density
+        '"{' : "DECRFS",        # Request Font Status
+      # '"|'
+      # '"}'
+      # '"~'
+
+        '$p' : "DECRQM",        # Request Mode Settings
+        '$q' : "DECSDDT",       # Select Disconnect Delay Time
+        '$r' : "DECCARA",       # Change Attributes in Rectangular Area
+        '$s' : "DECSPRTT",      # Select Printer Type
+        '$t' : "DECRARA",       # Reverse Attributes in Rectangular Area
+        '$u' : "DECRQTSR",      # Request Terminal State Report
+        '$v' : "DECCRA",        # Copy Rectangular Area
+        '$w' : "DECRQPSR",      # Request Presentation State Report
+        '$x' : "DECFRA",        # Fill Rectangular Area
+        '$y' : "DECRPM",        # Report Mode Settings
+        '$z' : "DECERA",        # Erase Rectangular Area
+        '${' : "DECSERA",       # Selective Erase Rectangular Area
+        '$|' : "DECSCPP",       # Set Columns Per Page
+        '$}' : "DECSASD",       # Select Active Status Display
+        '$~' : "DECSSDT",       # Select Status Display Type
+
+      # '&p'
+        '&q' : "DECSNC",        # Set Number of Copies
+      # '&r'
+      # '&s'
+      # '&t'
+        '&u' : "DECRQUPSS",     # Request User-Preferred Supplemental Set
+      # '&v'
+        '&w' : "DECLRP",        # Locator Report
+        '&x' : "DECES",         # Enable Session
+      # '&y'
+      # '&z'
+      # '&{'
+      # '&|'
+      # '&}'
+      # '&~'
+
+      # "'p"
+        "'q" : "DECSBCA",       # Select Bar Code Attributes
+      # "'r"
+        "'s" : "DECTLTC",       # Transmit Line Termination Characters
+      # "'t"
+      # "'u"
+      # "'v"
+        "'w" : "DECEFR",        # Enable Filter Rectangle
+      # "'x"
+      # "'y"
+        "'z" : "DECELR",        # Enable Locator Reports
+        "'{" : "DECSLE",        # Select Locator Events
+        "'|" : "DECRQLP",       # Request Locator Position
+        "'}" : "DECIC",         # Insert Column
+        "'~" : "DECDC",         # Delete Column
+
+        ')p' : "DECSDPT",       # Select Digital Printed Data Type
+      # ')q'
+      # ')r'
+      # ')s'
+      # ')t'
+      # ')u'
+      # ')v'
+      # ')w'
+      # ')x'
+      # ')y'
+      # ')z'
+      # '){'
+      # ')|'
+        ')}' : "DECSTGLT",      # Select Text/Graphics Look-Up Table
+
+        '*p' : "DECSPPCS",      # Select ProPrinter Character Set
+        '*q' : "DECSRC",        # Secure Reset Confirmation
+        '*r' : "DECSCS",        # Select Communication Speed
+        '*s' : "DECSFC",        # Select Flow Control
+      # '*t'
+        '*u' : "DECSCP",        # Select Communication Port
+      # '*v'
+      # '*w'
+        '*x' : "DECSACE",       # Select Attribute Change Extent
+        '*y' : "DECRQCRA",      # Request Checksum of Rectangular Area
+        '*z' : "DECINVM",       # Invoke Macro
+        '*{' : "DECMSR",        # Macro Space Report
+        '*|' : "DECSNLS",       # Select Number of Lines per Screen
+        '*}' : "DECLFKC",       # Local Function Key Control
+      # '*~'
+
+        '+p' : "DECSR",         # Secure Reset
+        '+q' : "DECELF",        # Enable Local Functions
+        '+r' : "DECSMKR",       # Select Modifier Key Reporting
+      # '+s'
+      # '+t'
+      # '+u'
+        '+v' : "DECMM",         # Memory Management
+        '+w' : "DECSPP",        # Set Port Parameter
+        '+x' : "DECRQPKFM",     # Program Key Free Memory Inquiry
+        '+y' : "DECPKFMR",      # Program Key Free Memory Report
+        '+z' : "DECPKA",        # Program Key Action
+      # '+{'
+      # '+|'
+      # '+}'
+      # '+~'
+
+        ',p' : "DECLTOD",       # Load Time of Day
+        ',q' : "DECTID",        # Select Terminal ID
+      # ',r'
+      # ',s'
+      # ',t'
+        ',u' : "DECRQKT",       # Key Type Inquiry
+        ',v' : "DECRPKT",       # Report Key Type
+        ',w' : "DECRQKD",       # Request Key Definition
+        ',x' : "DECSPMA",       # Session Page Memory Allocation
+        ',y' : "DECUS",         # Update Session
+        ',z' : "DECDLDA",       # Down Line Load Allocation
+        ',{' : "DECSZS",        # Select Zero Symbol
+        ',|' : "DECAC",         # Assign Color
+        ',}' : "DECATC",        # Alternate Text Color
+        ',~' : "DECPS",         # Play Sound
+
+        '-p' : "DECARR",        # Select Auto Repeat Rate
+        '-q' : "DECCRTST",      # CRT Saver Timing
+        '-r' : "DECSEST",       # Energy Saver Timing
+      # '-s'
+      # '-t'
+      # '-u'
+      # '-v'
+      # '-w'
+      # '-x'
+      # '-y'
+      # '-z'
+      # '-{'
+      # '-|'
+      # '-}'
+      # '-~'
     }
 
 
