@@ -3,7 +3,52 @@
 import sys, os
 import array
 
-EXT = '.html'
+
+def decorator_setter(deco):
+    name = deco.func_name
+    def decorator_with_arg(arg):
+        def decorator(f):
+            setattr(f, name, arg)
+        return decorator
+    return decorator_with_arg
+
+
+def control_code(code):
+    def deco(f):
+        f.control_code = code
+    return deco
+
+def esc_seq(seq):
+    def deco(f):
+        f.esc_seq = seq
+    return deco
+
+def csi_seq(seq):
+    def deco(f):
+        f.csi_seq = seq
+    return deco
+
+def apc_seq(seq):
+    def deco(f):
+        f.apc_seq = seq
+    return deco
+
+def osc_seq(seq):
+    def deco(f):
+        f.osc_seq = seq
+    return deco
+
+def dsc_seq(seq):
+    def deco(f):
+        f.dsc_seq = seq
+    return deco
+
+def pm_seq(seq):
+    def deco(f):
+        f.pm_seq = seq
+    return deco
+
+
 
 
 ATTRIBUTES  = 0xffff0000
@@ -498,6 +543,12 @@ class Terminal (object):
       # '-}'
       # '-~'
     }
+
+
+    def _new_cmd(type, seq):
+        def deco(func):
+            type[seq] = func
+        return deco
 
 
     call_unknown = None
