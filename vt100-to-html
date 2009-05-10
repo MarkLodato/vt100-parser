@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+# Requires Python 2.6
+
 import sys, os
-import array
-import types
+import re
 
 
 sequence_types = ['control_code', 'esc_seq', 'csi_seq', 'apc_seq', 'osc_seq',
@@ -52,26 +53,466 @@ class TerminalMeta (type):
         return o
 
 
+class Ground (State):
+
+    @action(0x07)
+    def BEL(self, c):
+        """Bell (Ctrl-G)"""
+
+    @action(0x08)
+    def BS(self, c):
+        """Backspace (Ctrl-H)"""
+
+    @action(0x09)
+    def HT(self, c):
+        """Horizontal Tab (HT) (Ctrl-I)"""
+
+    @action(0x0a)
+    def LF(self, c):
+        """Line Feed or New Line (NL) (Ctrl-J)"""
+
+    @action(0x0b)
+    def VT(self, c):
+        """Vertical Tab (Ctrl-K) same as LF"""
+
+    @action(0x0c)
+    def FF(self, c):
+        """Form Feed or New Page (NP) (Ctrl-L) same as LF"""
+
+    @action(0x0d)
+    def CR(self, c):
+        """Carriage Return (Ctrl-M)"""
+
+    @action(0x0e)
+    def SO(self, c):
+        """Shift Out (Ctrl-N) ->  Switch  to  Alternate  Character  Set:
+            invokes the G1 character set."""
+
+    @action(0x0f)
+    def SI(self, c):
+        """Shift In  (Ctrl-O)  ->  Switch  to  Standard  Character  Set:
+            invokes the G0 character set."""
+
+    @action(0x20, 0x7e):
+    def printable(self, c):
+
+    def default(self, c):
+        pass
+
+
 class Terminal (object):
     __metaclass__ = TerminalMeta
 
+    def __init__(self):
+        self.state = 'ground'
+        self.prev_state = None
+        self.next_state = None
+        self.clear()
 
-    @control_code('\x0d')
-    def CR(self):
+    # ---------- Utilities ----------
+
+    def clear(self, c):
+        """Reset internal buffers."""
+        self.collected = bytearray()
+
+    def output(self, c):
+        """Print the character at the current position and increment the
+        cursor to the next position."""
+        # TODO
         pass
 
-    @control_code('\x0a')
-    def LF(self):
+    def ignore(self, c):
+        """Ignore the character."""
         pass
 
-    @esc_seq('c')
-    def FO(self):
+    def collect(self, c):
+        """Record the character as an intermediate."""
+        self.collected.append(c)
+
+    def clear_on_enter(self, old_state):
+        """Since most enter_* functions just call self.clear(), this is a
+        common function so that you can set enter_foo = clear_on_enter."""
+        self.clear()
+
+    # ---------- Parsing ----------
+
+    def parse(self, c):
+        self.next_state = self.state
+        if c < 0:
+            raise ValueError('input must be non negative (got %d)' % c)
+        try:
+            f = getattr('parse_%s' % self.state)
+        except KeyError:
+            raise RuntimeError("internal error: unknown state %s" %
+                    repr(self.state))
+        else:
+            f(c)
+        self.transition()
+
+    def transition(self):
+        try:
+            f = getattr('leave_%s' % self.state)
+        except KeyError:
+            pass
+        else:
+            f(self.next_state)
+        self.next_state, self.state, self.prev_state = (None,
+                self.next_state, self.state)
+        try:
+            f = getattr('enter_%s' % self.state)
+        except KeyError:
+            pass
+        else:
+            f(self.prev_state)
+
+    def parse_ground(self, c):
+        if c < 0x20:
+            self.execute(c)
+        else:
+            self.output(c)
+
+    # ---------- Single-character commands (C0) ----------
+
+    def execute(self, c):
+        """Execute a C0 command."""
+        name = self.commands.get(bytes([c]), None)
+        if name is None:
+            f = self.ignore
+        else:
+            f = getattr(self, name, self.ignore)
+        f(c)
+
+    @command(b'\x05')
+    def ENQ(self, c):
+        """Return Terminal Status (Ctrl-E).  Default response is an empty
+        string, but may be overridden by a resource answerbackString."""
         pass
+
+    @command(b'\x07')
+    def BEL(self, c):
+        """Bell (Ctrl-G)"""
+        pass
+
+    @command(b'\x08')
+    def BS(self, c):
+        """Backspace (Ctrl-H)"""
+        # TODO
+
+    @command(b'\x09')
+    def HT(self, c):
+        """Horizontal Tab (HT) (Ctrl-I)"""
+        # TODO
+
+    @command(b'\x0a')
+    def LF(self, c):
+        """Line Feed or New Line (NL) (Ctrl-J)"""
+        # TODO
+
+    @command(b'\x0b')
+    def VT(self, c):
+        """Vertical Tab (Ctrl-K) same as LF"""
+        self.LF(c)
+
+    @command(b'\x0c')
+    def FF(self, c):
+        """Form Feed or New Page (NP) (Ctrl-L) same as LF"""
+        self.LF(c)
+
+    @command(b'\x0d')
+    def CR(self, c):
+        """Carriage Return (Ctrl-M)"""
+        # TODO
+
+    @command(b'\x0e')
+    def SO(self, c):
+        """Shift Out (Ctrl-N) -> Switch to Alternate Character Set: invokes
+        the G1 character set."""
+        pass
+
+    @command(b'\x0f')
+    def SI(self, c):
+        """Shift In (Ctrl-O) -> Switch to Standard Character Set: invokes the
+        G0 character set (the default)."""
+        pass
+
+    @command(b'\x18')
+    def CAN(self, c):
+        """Cancel (Ctrl-X)"""
+        # TODO
+
+    @command(b'\x1a')
+    def SUB(self, c):
+        """Substitute (Ctrl-Z)"""
+        # for now, just call cancel
+        self.CAN(c)
+
+    @command(b'\x1b')
+    def ESC(self, c):
+        # TODO merge with control string processing?
+        self.next_state = 'escape'
+
+
+    # ---------- Escape Sequences ----------
+
+    enter_escape = clear_on_enter
+
+    def parse_escape(self, c):
+        if c < 0x20:
+            self.execute(c)
+        elif c < 0x30:
+            self.collect(c)
+        elif c < 0x7f:
+            self.next_state = 'ground'
+            self.dispatch_escape(c)
+        else:
+            self.ignore(c)
+
+    def dispatch_escape(self, c):
+        command = bytes(self.collected) + bytes([c])
+        name = self.escape_sequences.get(c, None)
+        if name is None:
+            f = self.ignore
+        else:
+            f = getattr(self, name, self.ignore)
+        f(command)
+
+    @escape(b'D')
+    def IND(self, c):
+        """Index (IND  is 0x84)"""
+        # TODO
+
+    @escape(b'E')
+    def NEL(self, c):
+        """Next Line (NEL  is 0x85)"""
+        # TODO
+
+    @escape(b'H')
+    def HTS(self, c):
+        """Tab Set (HTS  is 0x88)"""
+        # TODO
+
+    @escape(b'M')
+    def RI(self, c):
+        """Reverse Index (RI  is 0x8d)"""
+        # TODO
+
+    @escape(b'N')
+    def SS2(self, c):
+        """Single Shift Select of G2 Character Set (SS2  is 0x8e): affects
+        next character only"""
+        pass
+
+    @escape(b'O')
+    def SS3(self, c):
+        """Single Shift Select of G3 Character Set (SS3  is 0x8f): affects
+        next character only"""
+        pass
+
+    @escape(b'P')
+    def DCS(self, c):
+        """Device Control String (DCS  is 0x90)"""
+        self.next_state = 'dcs'
+
+    @escape(b'V')
+    def SPA(self, c):
+        """Start of Guarded Area (SPA  is 0x96)"""
+        pass
+
+    @escape(b'W')
+    def EPA(self, c):
+        """End of Guarded Area (EPA  is 0x97)"""
+        pass
+
+    @escape(b'X')
+    def SOS(self, c):
+        """Start of String (SOS  is 0x98)"""
+        self.next_state = 'sos'
+
+    @escape(b'Z')
+    def DECID(self, c):
+        """Return Terminal ID (DECID is 0x9a).  Obsolete form of CSI c
+        (DA)."""
+        pass
+
+    @escape(b'[')
+    def CSI(self, c):
+        """Control Sequence Introducer (CSI  is 0x9b)"""
+        self.next_state = 'control_sequence'
+
+    @escape(b'\\')
+    def ST(self, c):
+        """String Terminator (ST  is 0x9c)"""
+        pass # TODO merge with string parsing?
+
+    @escape(b']')
+    def OSC(self, c):
+        """Operating System Command (OSC  is 0x9d)"""
+        self.next_state = 'osc'
+
+    @escape(b'^')
+    def PM(self, c):
+        """Privacy Message (PM  is 0x9e)"""
+        self.next_state = 'pm'
+
+    @escape(b'_')
+    def APC(self, c):
+        """Application Program Command (APC  is 0x9f)"""
+        self.next_state = 'apc'
+
+
+    @escape(b' F')
+    def S7C1T(self, c):
+        """7-bit controls"""
+        # TODO
+
+    @escape(b' G')
+    def S8C1T(self, c):
+        """8-bit controls"""
+        # TODO
+
+    @escape(b'7')
+    def DECSC(self, c):
+        """Save Cursor"""
+        # TODO
+
+    @escape(b'8')
+    def DECRC(self, c):
+        """Restore Cursor"""
+        # TODO
+
+    @escape(b'c')
+    def RIS(self, c):
+        """Full Reset"""
+        # TODO
+
+    # TODO other ESC sequences
+
+
+    # ---------- Control Sequences ----------
+
+    enter_control_sequence = clear_on_enter
+
+    def parse_control_sequence(self, c):
+        if c < 0x20:
+            self.execute(c)
+        elif c < 0x40:
+            self.collect(c)
+        elif c < 0x7f:
+            self.next_state = 'ground'
+            self.dispatch_control_sequence(c)
+        else:
+            self.ignore(c)
+
+    def dispatch_control_sequence(self, c):
+        self.collected.append(c)
+        m = re.match(b'^([<-?]?)([0-?]*)([ -/]*[\x40-\x7f])$', self.collected)
+        private = False
+        if not m:
+            return self.invalid_control_sequence()
+        if m.group(1):
+            # Private parameters
+            param = bytes(m.group(1) + m.group(2))
+            private = True
+        elif m.group(2):
+            # Standard parameters
+            try:
+                param = [int(x)  for x in m.group(2).split(b';')]
+            except ValueError:
+                return self.invalid_control_sequence()
+        else:
+            param = []
+        command = bytes(m.group(3))
+
+        name = self.control_sequences.get(command, None)
+        if name is None:
+            f = self.ignore_control_sequence
+        else:
+            f = getattr(self, name, self.ignore_control_sequence)
+        if private and not getattr(f, 'allow_private', False):
+            f = self.ignore_control_sequence
+        f(command, param)
+
+    def invalid_control_sequence(self):
+        """Called when the control sequence is invalid."""
+        pass
+
+    def ignore_control_sequence(command, param):
+        """Called when the control sequence is ignored."""
+        pass
+
+
+    @control(b'@')
+    def ICH(self, command, param):
+        """Insert (Blank) Character(s)
+        The only the first parameter is used (default 1).
+        Existing characters are moved to right; characters moved off end of
+        line are lost."""
+        # TODO
+
+
+    # TODO other CS's
+
+
+    # ---------- Control Strings ----------
+
+    enter_osc = clear_on_enter
+    enter_dsc = clear_on_enter
+    enter_sos = clear_on_enter
+    enter_apc = clear_on_enter
+    enter_pm  = clear_on_enter
+
+    def parse_osc(self, c): self.parse_control_string(c)
+    def parse_dsc(self, c): self.parse_control_string(c)
+    def parse_sos(self, c): self.parse_control_string(c)
+    def parse_pm (self, c): self.parse_control_string(c)
+    def parse_apc(self, c): self.parse_control_string(c)
+
+    finish_osc = None
+    finish_dsc = None
+    finish_sos = None
+    finish_apc = None
+    finish_pm  = None
+
+    def parse_control_string(self, c):
+        # Consume the whole string and pass it to the process function.
+        if c in (0x18, 0x1a):
+            # CAN and SUB quit the string
+            self.cancel_control_string()
+            # should we self.execute(c) ?
+        elif c == 0x07 and self.state == 'osc':
+            # NOTE: xterm ends OSC with BEL, in addition to ESC \
+            self.finish_control_string()
+        elif self.collected and self.collected[-1] == 0x1b:
+            # NOTE: xterm consumes the character after the ESC always, but
+            # only process it if it is '\'.  Not sure about VTxxx.
+            self.collected = self.collected[:-1]
+            if c == 0x5c:
+                self.finish_control_string()
+            else:
+                self.cancel_control_string()
+        else:
+            self.collect(c)
+
+    def finish_control_string(self):
+        name = 'finish_%s' % self.state
+        f = getattr(self, name, self.ignore_control_string)
+        f(self.collected)
+        self.next_state = 'ground'
+
+    def cancel_control_string(self):
+        self.next_state = 'ground'
+
+    def ignore_control_string(self):
+        """Called when a control string is ignored."""
+        pass
+
+
+
+
+
+
 
 
 
 if __name__ == "__main__":
-    print Terminal.control_code
-    print Terminal.esc_seq
-    print Terminal.csi_seq
-    print Terminal.pm_seq
+    pass
