@@ -213,6 +213,9 @@ class Terminal:
     @command('\x09')        # ^I
     def HT(self, c=None):
         """Horizontal Tab"""
+        if self.col >= self.width:
+            self.CR()
+            self.LF()
         while self.col < self.width-1:
             self.col += 1
             if self.tabstops[self.col]:
