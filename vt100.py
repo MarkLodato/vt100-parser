@@ -87,12 +87,18 @@ class Terminal:
         self.width = width
         self.height = height
         self.screen = np.array([[None] * width] * height, dtype=object)
-        self.pos = [0,0]
+        self.row = 0
+        self.col = 0
         self.tabstops = [(i%8)==0 for i in range(width)]
         self.attr = None
         self.clear()
 
     # ---------- Utilities ----------
+
+    @property
+    def pos(self):
+        """The cursor position as (row, column)."""
+        return self.row, self.col
 
     def clear(self):
         """Reset internal buffers for switching between states."""
@@ -102,11 +108,11 @@ class Terminal:
         """Print the character at the current position and increment the
         cursor to the next position.  If the current position is past the end
         of the line, starts a new line."""
-        if self.pos[1] >= self.width:
+        if self.col >= self.width:
             self.CR()
             self.LF()
         c = Character(c, self.attr)
-        self.screen[tuple(self.pos)] = c
+        self.screen[self.pos] = c
         self.CUF()
 
     def scroll(self, n):
@@ -202,23 +208,21 @@ class Terminal:
     @command('\x08')        # ^H
     def BS(self, c=None):
         """Backspace"""
-        self.pos[1] -= 1
-        if self.pos[1] < 0:
-            self.pos[1] = 0
+        self.col -= 1  if self.col > 0 else 0
 
     @command('\x09')        # ^I
     def HT(self, c=None):
         """Horizontal Tab"""
-        while self.pos[1] < self.width-1:
-            self.pos[1] += 1
-            if self.tabstops[self.pos[1]]:
+        while self.col < self.width-1:
+            self.col += 1
+            if self.tabstops[self.col]:
                 break
 
     @command('\x0a')        # ^J
     def LF(self, c=None):
         """Line Feed"""
-        if self.pos[0] < self.height - 1:
-            self.pos[0] += 1
+        if self.row < self.height - 1:
+            self.row += 1
         else:
             self.scroll(1)
 
@@ -235,7 +239,7 @@ class Terminal:
     @command('\x0d')        # ^M
     def CR(self, c=None):
         """Carriage Return"""
-        self.pos[1] = 0
+        self.col = 0
 
     @command('\x18')        # ^X
     def CAN(self, c=None):
@@ -292,13 +296,13 @@ class Terminal:
     @escape('H')
     def HTS(self, c=None):
         """Horizontal Tab Set"""
-        self.tabstops[self.pos[1]] = True
+        self.tabstops[self.col] = True
 
     @escape('M')
     def RI(self, c=None):
         """Reverse Index (reverse line feed)"""
-        if self.pos[0] > 0:
-            self.pos[0] -= 1
+        if self.row > 0:
+            self.row -= 1
         else:
             self.scroll(-1)
 
@@ -389,25 +393,25 @@ class Terminal:
     def CUU(self, command=None, param=None):
         """Cursor Up"""
         n = param_list(param, 1)[0]
-        self.pos[0] = clip(self.pos[0]-n, self.height)
+        self.row = clip(self.row-n, self.height)
 
     @control('B')
     def CUD(self, command=None, param=None):
         """Cursor Down"""
         n = param_list(param, 1)[0]
-        self.pos[0] = clip(self.pos[0]+n, self.height)
+        self.row = clip(self.row+n, self.height)
 
     @control('C')
     def CUF(self, command=None, param=None):
         """Cursor Forward"""
         n = param_list(param, 1)[0]
-        self.pos[1] = clip(self.pos[1]+n, self.width)
+        self.col = clip(self.col+n, self.width)
 
     @control('D')
     def CUB(self, command=None, param=None):
         """Cursor Backward"""
         n = param_list(param, 1)[0]
-        self.pos[1] = clip(self.pos[1]-n, self.width)
+        self.col = clip(self.col-n, self.width)
 
     @control('E')
     def CNL(self, command=None, param=None):
@@ -425,14 +429,14 @@ class Terminal:
     def CHA(self, command=None, param=None):
         """Character Position Absolute"""
         n = param_list(param, 1)[0]
-        self.pos[1] = clip(n-1, self.width)
+        self.col = clip(n-1, self.width)
 
     @control('H')
     def CUP(self, command=None, param=None):
         """Cursor Position [row;column]"""
         n,m = param_list(param, 1, min_length=2)[:2]
-        self.pos[0] = clip(n-1, self.height)
-        self.pos[1] = clip(m-1, self.width)
+        self.row = clip(n-1, self.height)
+        self.col = clip(m-1, self.width)
 
     @control('I')
     def CHT(self, command=None, param=None):
@@ -498,9 +502,9 @@ class Terminal:
         """Cursor Backward Tabulation"""
         n = param_list(param, 1)[0]
         for i in range(n):
-            while self.pos[1] > 0:
-                self.pos[1] -= 1
-                if self.tabstops[self.pos[1]]:
+            while self.col > 0:
+                self.col -= 1
+                if self.tabstops[self.col]:
                     break
 
     @control('`')
@@ -522,7 +526,7 @@ class Terminal:
     def VPA(self, command=None, param=None):
         """Line Position Absolute"""
         n = param_list(param, 1)[0]
-        self.pos[0] = clip(n-1, self.height)
+        self.row = clip(n-1, self.height)
 
     @control('e')
     def VPR(self, command=None, param=None):
@@ -539,7 +543,7 @@ class Terminal:
         """Tab Clear"""
         n = param_list(param, 0)[0]
         if n == 0:
-            self.tabstops[self.pos[1]] = False
+            self.tabstops[self.col] = False
         elif n == 3:
             self.tabstops[:] = [False] * self.width
 
