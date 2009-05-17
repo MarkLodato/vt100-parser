@@ -38,8 +38,7 @@ def param_list(s, default, zero_is_default=True, min_length=1):
             l = [f(token) for token in s.split(b';')]
         except ValueError:
             raise InvalidParameterListError
-    if len(l) < min_length:
-        l += [default] * (len(l) - min_length)
+    l += [default] * (min_length - len(l))
     return l
 
 
