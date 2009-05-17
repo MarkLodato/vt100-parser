@@ -56,7 +56,7 @@ def clip(n, start, stop=None):
 
 def new_sequence_decorator(dictionary):
     def decorator_generator(key):
-        assert isinstance(key, bytes):
+        assert isinstance(key, str)
         def decorator(f, key=key):
             dictionary[key] = f.__name__
             return f
