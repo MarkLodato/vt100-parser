@@ -9,67 +9,12 @@ import numpy as np
 
 __metaclass__ = type
 
-sequence_types = ['control_code', 'esc_seq', 'csi_seq', 'apc_seq', 'osc_seq',
-        'dcs_seq', 'pm_seq']
-
-def decorator_with_arg(name):
-    """Return a new decorator that takes an argument `arg' that sets the
-    attribute `name' to the value `arg'."""
-    def decorator_generator(arg):
-        if not isinstance(arg, basestring):
-            raise ValueError('Must call `%s\' with a string argument' % name)
-        def decorator(f):
-            setattr(f, name, arg)
-            return f
-        return decorator
-    return decorator_generator
-
-# Create a decorator for each sequence type.  Each decorator takes an
-# argument `seq', which is the sequence to trigger the function.
-for name in sequence_types:
-    globals()[name] = decorator_with_arg(name)
 
 class Character:
     """A single character along with an associated attribute."""
     def __init__(self, char, attr = None):
         self.char = char
         self.attr = attr
-
-class Line (list):
-    """A screen line."""
-    def __setitem__(self, pos, value):
-        if len(self) == pos:
-            self.append(value)
-        else:
-            if 0 <= len(self) < pos:
-                self.extend([None] * (pos - len(self) + 1))
-            super(Line,self).__setitem__(pos, value)
-
-# TODO fix this for new style; add @commmand, @escape, @control
-class TerminalMeta (type):
-    def __new__(cls, className, baseClasses, dictOfMethods):
-        o = type.__new__(cls, className, baseClasses, dictOfMethods)
-
-        # Create a new dictionary for each sequence type
-        seqs = {}
-        for name in sequence_types:
-            d = dict()
-            seqs[name] = d
-            setattr(o, name, d)
-
-        # For each of the class's attributes, add the sequences to the
-        # dictionaries if present.
-        for attr in dir(o):
-            f = getattr(o, attr)
-            for name in sequence_types:
-                try:
-                    seq = getattr(f, name)
-                except AttributeError:
-                    pass
-                else:
-                    seqs[name][seq] = f
-        return o
-
 
 class InvalidParameterListError (RuntimeError):
     pass
