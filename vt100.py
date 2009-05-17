@@ -149,30 +149,29 @@ class Terminal:
 
     def parse_single(self, c):
         """Parse a single character (integer)."""
-        self.next_state = self.state
         if c < 0:
             raise ValueError('input must be non negative (got %d)' % c)
         try:
-            f = getattr('parse_%s' % self.state)
-        except KeyError:
+            f = getattr(self, 'parse_%s' % self.state)
+        except AttributeError:
             raise RuntimeError("internal error: unknown state %s" %
                     repr(self.state))
-        else:
-            f(c)
+        self.next_state = self.state
+        f(c)
         self.transition()
 
     def transition(self):
         try:
-            f = getattr('leave_%s' % self.state)
-        except KeyError:
+            f = getattr(self, 'leave_%s' % self.state)
+        except AttributeError:
             pass
         else:
             f(self.next_state)
         self.next_state, self.state, self.prev_state = (None,
                 self.next_state, self.state)
         try:
-            f = getattr('enter_%s' % self.state)
-        except KeyError:
+            f = getattr(self, 'enter_%s' % self.state)
+        except AttributeError:
             pass
         else:
             f(self.prev_state)
