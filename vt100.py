@@ -15,6 +15,8 @@ class Character:
     def __init__(self, char, attr = None):
         self.char = char
         self.attr = attr
+    def __repr__(self):
+        return str(self.char)
 
 class InvalidParameterListError (RuntimeError):
     pass
