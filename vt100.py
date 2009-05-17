@@ -35,7 +35,7 @@ def param_list(s, default, zero_is_default=True, min_length=1):
         l = []
     else:
         try:
-            l = [f(token) for token in s.split(b';')]
+            l = [f(token) for token in s.split(';')]
         except ValueError:
             raise InvalidParameterListError
     l += [default] * (min_length - len(l))
@@ -96,7 +96,7 @@ class Terminal:
 
     def clear(self):
         """Reset internal buffers for switching between states."""
-        self.collected = bytearray()
+        self.collected = ''
 
     def output(self, c):
         """Print the character at the current position and increment the
@@ -105,7 +105,8 @@ class Terminal:
         if self.pos[1] >= self.width:
             self.CR()
             self.LF()
-        self.screen[tuple(self.pos)] = Character(c, self.attr)
+        c = Character(c, self.attr)
+        self.screen[tuple(self.pos)] = c
         self.CUF()
 
     def scroll(self, n):
@@ -133,7 +134,7 @@ class Terminal:
 
     def collect(self, c):
         """Record the character as an intermediate."""
-        self.collected.append(c)
+        self.collected += c
 
     def clear_on_enter(self, old_state):
         """Since most enter_* functions just call self.clear(), this is a
@@ -148,9 +149,9 @@ class Terminal:
             self.parse_single(c)
 
     def parse_single(self, c):
-        """Parse a single character (integer)."""
-        if c < 0:
-            raise ValueError('input must be non negative (got %d)' % c)
+        """Parse a single character."""
+        if isinstance(c, int):
+            c = chr(c)
         try:
             f = getattr(self, 'parse_%s' % self.state)
         except AttributeError:
@@ -177,7 +178,7 @@ class Terminal:
             f(self.prev_state)
 
     def parse_ground(self, c):
-        if c < 0x20:
+        if ord(c) < 0x20:
             self.execute(c)
         else:
             self.output(c)
@@ -186,26 +187,26 @@ class Terminal:
 
     def execute(self, c):
         """Execute a C0 command."""
-        name = self.commands.get(bytes([c]), None)
+        name = self.commands.get(c, None)
         if name is None:
             f = self.ignore
         else:
             f = getattr(self, name, self.ignore)
         f(c)
 
-    @command(b'\x07')       # ^G
+    @command('\x07')        # ^G
     def BEL(self, c=None):
         """Bell"""
         pass
 
-    @command(b'\x08')       # ^H
+    @command('\x08')        # ^H
     def BS(self, c=None):
         """Backspace"""
         self.pos[1] -= 1
         if self.pos[1] < 0:
             self.pos[1] = 0
 
-    @command(b'\x09')       # ^I
+    @command('\x09')        # ^I
     def HT(self, c=None):
         """Horizontal Tab"""
         while self.pos[1] < self.width-1:
@@ -213,7 +214,7 @@ class Terminal:
             if self.tabstops[self.pos[1]]:
                 break
 
-    @command(b'\x0a')       # ^J
+    @command('\x0a')        # ^J
     def LF(self, c=None):
         """Line Feed"""
         if self.pos[0] < self.height - 1:
@@ -221,32 +222,32 @@ class Terminal:
         else:
             self.scroll(1)
 
-    @command(b'\x0b')       # ^K
+    @command('\x0b')        # ^K
     def VT(self, c=None):
         """Vertical Tab"""
         self.LF(c)
 
-    @command(b'\x0c')       # ^L
+    @command('\x0c')        # ^L
     def FF(self, c=None):
         """Form Feed"""
         self.LF(c)
 
-    @command(b'\x0d')       # ^M
+    @command('\x0d')        # ^M
     def CR(self, c=None):
         """Carriage Return"""
         self.pos[1] = 0
 
-    @command(b'\x18')       # ^X
+    @command('\x18')        # ^X
     def CAN(self, c=None):
         """Cancel"""
         self.next_state = 'ground'
 
-    @command(b'\x1a')       # ^Z
+    @command('\x1a')        # ^Z
     def SUB(self, c=None):
         """Substitute"""
         self.next_state = 'ground'
 
-    @command(b'\x1b')       # ^[
+    @command('\x1b')        # ^[
     def ESC(self, c=None):
         """Escape"""
         self.next_state = 'escape'
@@ -257,18 +258,18 @@ class Terminal:
     enter_escape = clear_on_enter
 
     def parse_escape(self, c):
-        if c < 0x20:
+        if ord(c) < 0x20:
             self.execute(c)
-        elif c < 0x30:
+        elif ord(c) < 0x30:
             self.collect(c)
-        elif c < 0x7f:
+        elif ord(c) < 0x7f:
             self.next_state = 'ground'
             self.dispatch_escape(c)
         else:
             self.ignore(c)
 
     def dispatch_escape(self, c):
-        command = bytes(self.collected) + bytes([c])
+        command = self.collected + c
         name = self.escape_sequences.get(c, None)
         if name is None:
             f = self.ignore
@@ -277,23 +278,23 @@ class Terminal:
         f(command)
 
 
-    @escape(b'D')
+    @escape('D')
     def IND(self, c=None):
         """Index"""
         self.LF()
 
-    @escape(b'E')
+    @escape('E')
     def NEL(self, c=None):
         """Next Line"""
         self.LF()
         self.CR()
 
-    @escape(b'H')
+    @escape('H')
     def HTS(self, c=None):
         """Horizontal Tab Set"""
         self.tabstops[self.pos[1]] = True
 
-    @escape(b'M')
+    @escape('M')
     def RI(self, c=None):
         """Reverse Index (reverse line feed)"""
         if self.pos[0] > 0:
@@ -301,37 +302,37 @@ class Terminal:
         else:
             self.scroll(-1)
 
-    @escape(b'P')
+    @escape('P')
     def DCS(self, c=None):
         """Device Control String"""
         self.next_state = 'dcs'
 
-    @escape(b'X')
+    @escape('X')
     def SOS(self, c=None):
         """Start of String"""
         self.next_state = 'sos'
 
-    @escape(b'[')
+    @escape('[')
     def CSI(self, c=None):
         """Control Sequence Introducer"""
         self.next_state = 'control_sequence'
 
-    @escape(b'\\')
+    @escape('\\')
     def ST(self, c=None):
         """String Terminator"""
         pass
 
-    @escape(b']')
+    @escape(']')
     def OSC(self, c=None):
         """Operating System Command"""
         self.next_state = 'osc'
 
-    @escape(b'^')
+    @escape('^')
     def PM(self, c=None):
         """Privacy Message"""
         self.next_state = 'pm'
 
-    @escape(b'_')
+    @escape('_')
     def APC(self, c=None):
         """Application Program Command"""
         self.next_state = 'apc'
@@ -342,19 +343,19 @@ class Terminal:
     enter_control_sequence = clear_on_enter
 
     def parse_control_sequence(self, c):
-        if c < 0x20:
+        if ord(c) < 0x20:
             self.execute(c)
-        elif c < 0x40:
+        elif ord(c) < 0x40:
             self.collect(c)
-        elif c < 0x7f:
+        elif ord(c) < 0x7f:
             self.next_state = 'ground'
             self.dispatch_control_sequence(c)
         else:
             self.ignore(c)
 
     def dispatch_control_sequence(self, c):
-        self.collected.append(c)
-        m = re.match(b'^([\x30-\x39]*)([\x20-\x29]*[\x40-\x7f])$',
+        self.collect(c)
+        m = re.match('^([\x30-\x39]*)([\x20-\x29]*[\x40-\x7f])$',
                      self.collected)
         if not m:
             return self.invalid_control_sequence()
@@ -379,68 +380,68 @@ class Terminal:
         pass
 
 
-    @control(b'@')
+    @control('@')
     def ICH(self, command=None, param=None):
         """Insert (blank) Characters"""
         # NOT IMPLEMENTED
 
-    @control(b'A')
+    @control('A')
     def CUU(self, command=None, param=None):
         """Cursor Up"""
         n = param_list(param, 1)[0]
         self.pos[0] = clip(self.pos[0]-n, self.height)
 
-    @control(b'B')
+    @control('B')
     def CUD(self, command=None, param=None):
         """Cursor Down"""
         n = param_list(param, 1)[0]
         self.pos[0] = clip(self.pos[0]+n, self.height)
 
-    @control(b'C')
+    @control('C')
     def CUF(self, command=None, param=None):
         """Cursor Forward"""
         n = param_list(param, 1)[0]
         self.pos[1] = clip(self.pos[1]+n, self.width)
 
-    @control(b'D')
+    @control('D')
     def CUB(self, command=None, param=None):
         """Cursor Backward"""
         n = param_list(param, 1)[0]
         self.pos[1] = clip(self.pos[1]-n, self.width)
 
-    @control(b'E')
+    @control('E')
     def CNL(self, command=None, param=None):
         """Cursor Next Line"""
         self.CUD(command, param)
         slef.CR()
 
-    @control(b'F')
+    @control('F')
     def CPL(self, command=None, param=None):
         """Cursor Previous Line"""
         self.CUU(command, param)
         slef.CR()
 
-    @control(b'G')
+    @control('G')
     def CHA(self, command=None, param=None):
         """Character Position Absolute"""
         n = param_list(param, 1)[0]
         self.pos[1] = clip(n-1, self.width)
 
-    @control(b'H')
+    @control('H')
     def CUP(self, command=None, param=None):
         """Cursor Position [row;column]"""
         n,m = param_list(param, 1, min_length=2)[:2]
         self.pos[0] = clip(n-1, self.height)
         self.pos[1] = clip(m-1, self.width)
 
-    @control(b'I')
+    @control('I')
     def CHT(self, command=None, param=None):
         """Cursor Forward Tabulation"""
         n = param_list(param, 1)[0]
         for i in range(n):
             self.HT()
 
-    @control(b'J')
+    @control('J')
     def ED(self, command=None, param=None):
         """Erase in Display
 
@@ -451,7 +452,7 @@ class Terminal:
         """
         # NOT IMPLEMENTED
 
-    @control(b'K')
+    @control('K')
     def EL(self, command=None, param=None):
         """Erase in Line
 
@@ -462,37 +463,37 @@ class Terminal:
         # NOT IMPLEMENTED
         # Note: param might be ? for selective
 
-    @control(b'L')
+    @control('L')
     def IL(self, command=None, param=None):
         """Insert Line(s)"""
         # NOT IMPLEMENTED
 
-    @control(b'M')
+    @control('M')
     def DL(self, command=None, param=None):
         """Delete Line(s)"""
         # NOT IMPLEMENTED
 
-    @control(b'P')
+    @control('P')
     def DCH(self, command=None, param=None):
         """Delete Character(s)"""
         # NOT IMPLEMENTED
 
-    @control(b'S')
+    @control('S')
     def SU(self, command=None, param=None):
         """Scroll Up"""
         # NOT IMPLEMENTED
 
-    @control(b'T')
+    @control('T')
     def SD(self, command=None, param=None):
         """Scroll Down / Mouse Tracking"""
         # NOT IMPLEMENTED
 
-    @control(b'X')
+    @control('X')
     def ECH(self, command=None, param=None):
         """Erase Character"""
         # NOT IMPLEMENTED
 
-    @control(b'Z')
+    @control('Z')
     def CBT(self, command=None, param=None):
         """Cursor Backward Tabulation"""
         n = param_list(param, 1)[0]
@@ -502,38 +503,38 @@ class Terminal:
                 if self.tabstops[self.pos[1]]:
                     break
 
-    @control(b'`')
+    @control('`')
     def HPA(self, command=None, param=None):
         """Character Position Absolute"""
         self.CHA(command, param)
 
-    @control(b'a')
+    @control('a')
     def HPR(self, command=None, param=None):
         """Character Position Forward (Horizontal Position Right)"""
         self.CUF(command, param)
 
-    @control(b'b')
+    @control('b')
     def REP(self, command=None, param=None):
         """Repeat"""
         # NOT IMPLEMENTED
 
-    @control(b'd')
+    @control('d')
     def VPA(self, command=None, param=None):
         """Line Position Absolute"""
         n = param_list(param, 1)[0]
         self.pos[0] = clip(n-1, self.height)
 
-    @control(b'e')
+    @control('e')
     def VPR(self, command=None, param=None):
         """Line Position Forward"""
         self.CUD(command, param)
 
-    @control(b'f')
+    @control('f')
     def HVP(self, command=None, param=None):
         """Horizontal and Vertical Position"""
         self.CUP(command, param)
 
-    @control(b'g')
+    @control('g')
     def TBC(self, command=None, param=None):
         """Tab Clear"""
         n = param_list(param, 0)[0]
@@ -542,60 +543,60 @@ class Terminal:
         elif n == 3:
             self.tabstops[:] = [False] * self.width
 
-    @control(b'h')
+    @control('h')
     def SM(self, command=None, param=None):
         """Set Mode"""
         # NOT IMPLEMENTED
 
-    @control(b'j')
+    @control('j')
     def HPB(self, command=None, param=None):
         """Character Position Backward"""
         self.CUB(command, param)
 
-    @control(b'k')
+    @control('k')
     def VPB(self, command=None, param=None):
         """Line Position Backward"""
         self.CUU(command, param)
 
-    @control(b'l')
+    @control('l')
     def RM(self, command=None, param=None):
         """Reset Mode"""
         # NOT IMPLEMENTED
 
-    @control(b'm')
+    @control('m')
     def SGR(self, command=None, param=None):
         """Set Graphics Attributes"""
         # NOT IMPLEMENTED
         # TODO '>m' xterm
 
-    @control(b'!p')
+    @control('!p')
     def DECSTR(self, command=None, param=None):
         """Soft Terminal Reset"""
         # NOT IMPLEMENTED
 
-    @control(b'r')
+    @control('r')
     def DECSTBM(self, command=None, param=None):
         """Set Scrolling Region"""
         # NOT IMPLEMENTED
         # Note: with param = "? Pm", restore DEC private mode values
 
-    @control(b'$r')
+    @control('$r')
     def DECCARA(self, command=None, param=None):
         """Change Attributes in Rectangular Area"""
         # NOT IMPLEMENTED
 
-    @control(b's')
+    @control('s')
     def save_cursor(self, command=None, param=None):
         """Save cursor"""
         # NOT IMPLEMENTED
         # Note: with param = "? Pm", set DEC private mode values
 
-    @control(b'$t')
+    @control('$t')
     def DECRARA(self, command=None, param=None):
         """Reverse Attributes in Rectangular Area"""
         # NOT IMPLEMENTED
 
-    @control(b'u')
+    @control('u')
     def restore_cursor(self, command=None, param=None):
         """Restore cursor"""
         # NOT IMPLEMENTED
@@ -664,74 +665,74 @@ class Terminal:
     #             Things implemented by xterm but not here.
     # ================================================================
 
-    @command(b'\x05')       # ^E
+    @command('\x05')       # ^E
     def ENQ(self, c=None):
         """ENQuiry"""
         # NOT IMPLEMENTED
 
-    @command(b'\x0e')       # ^N
+    @command('\x0e')       # ^N
     def SO(self, c=None):
         """Shift Out (LS1)"""
         # NOT IMPLEMENTED
 
-    @command(b'\x0f')       # ^O
+    @command('\x0f')       # ^O
     def SI(self, c=None):
         """Shift In (LS0)"""
         # NOT IMPLEMENTED
 
     # --------------------
 
-    @escape(b'7')
+    @escape('7')
     def DECSC(self, c=None):
         """Save Cursor"""
         # NOT IMPLEMENTED
 
-    @escape(b'8')
+    @escape('8')
     def DECRC(self, c=None):
         """Restore Cursor"""
         # NOT IMPLEMENTED
 
-    @escape(b'=')
+    @escape('=')
     def DECPAM(self, command=None, param=None):
         """Application Keypad"""
         # NOT IMPLEMENTED
 
-    @escape(b'>')
+    @escape('>')
     def DECPNM(self, command=None, param=None):
         """Normal Keypad"""
         # NOT IMPLEMENTED
 
-    @escape(b'N')
+    @escape('N')
     def SS2(self, c=None):
         """Single Shift 2"""
         # NOT IMPLEMENTED
 
-    @escape(b'O')
+    @escape('O')
     def SS3(self, c=None):
         """Single Shift 3"""
         # NOT IMPLEMENTED
 
-    @escape(b' F')
+    @escape(' F')
     def S7C1T(self, c=None):
         """7-bit controls"""
         # NOT IMPLEMENTED
 
-    @escape(b' G')
+    @escape(' G')
     def S8C1T(self, c=None):
         """8-bit controls"""
         # NOT IMPLEMENTED
 
-    @escape(b' L')
+    @escape(' L')
     def set_ansi_level_1(self, c=None):
         """Set ANSI conformance level 1"""
         # NOT IMPLEMENTED
 
-    @escape(b' M')
+    @escape(' M')
     def set_ansi_level_2(self, c=None):
         """Set ANSI conformance level 2"""
         # NOT IMPLEMENTED
 
-    @escape(b' N')
+    @escape(' N')
     def set_ansi_level_3(self, c=None):
         """Set ANSI conformance level 3"""
         # NOT IMPLEMENTED
@@ -763,34 +764,34 @@ class Terminal:
 
     # --------------------
 
-    @control(b'c')
+    @control('c')
     def DA(self, command=None, param=None):
         """Send Device Attributes"""
         # NOT IMPLEMENTED
 
-    @control(b'i')
+    @control('i')
     def MC(self, command=None, param=None):
         """Media Copy"""
         # NOT IMPLEMENTED
 
-    @control(b'n')
+    @control('n')
     def DSR(self, command=None, param=None):
         """Device Status Report"""
         # NOT IMPLEMENTED
 
-    # @control(b'p') with '>': xterm pointer mode
+    # @control('p') with '>': xterm pointer mode
 
-    @control(b'"p')
+    @control('"p')
     def DECSCL(self, command=None, param=None):
         """Set Conformance Level"""
         # NOT IMPLEMENTED
 
-    @control(b'"q')
+    @control('"q')
     def DECSCA(self, command=None, param=None):
         """Set Character protection Attribute"""
         # NOT IMPLEMENTED
 
-    @control(b't')
+    @control('t')
     def window_manipulation(self, command=None, param=None):
         """Window manipulation"""
         # NOT IMPLEMENTED
@@ -799,286 +800,286 @@ class Terminal:
     #                  Things not implemented by xterm.
     # ================================================================
 
-    @command(b'\x00')       # ^@
+    @command('\x00')        # ^@
     def NUL(self, c=None):
         """NULl"""
         # NOT IMPLEMENTED
 
-    @command(b'\x01')       # ^A
+    @command('\x01')        # ^A
     def SOH(self, c=None):
         """Start Of Heading"""
         # NOT IMPLEMENTED
 
-    @command(b'\x02')       # ^B
+    @command('\x02')        # ^B
     def STX(self, c=None):
         """Start of TeXt"""
         # NOT IMPLEMENTED
 
-    @command(b'\x03')       # ^C
+    @command('\x03')        # ^C
     def ETX(self, c=None):
         """End of TeXt"""
         # NOT IMPLEMENTED
 
-    @command(b'\x04')       # ^D
+    @command('\x04')        # ^D
     def EOT(self, c=None):
         """End Of Transmission"""
         # NOT IMPLEMENTED
 
-    @command(b'\x06')       # ^F
+    @command('\x06')        # ^F
     def ACK(self, c=None):
         """ACKnowledge"""
         # NOT IMPLEMENTED
 
-    @command(b'\x10')       # ^P
+    @command('\x10')        # ^P
     def DLE(self, c=None):
         """Data Link Escape"""
         # NOT IMPLEMENTED
 
-    @command(b'\x11')       # ^Q
+    @command('\x11')        # ^Q
     def DC1(self, c=None):
         """Device Control 1"""
         # NOT IMPLEMENTED
 
-    @command(b'\x12')       # ^R
+    @command('\x12')        # ^R
     def DC2(self, c=None):
         """Device Control 2"""
         # NOT IMPLEMENTED
 
-    @command(b'\x13')       # ^S
+    @command('\x13')        # ^S
     def DC3(self, c=None):
         """Device Control 3"""
         # NOT IMPLEMENTED
 
-    @command(b'\x14')       # ^T
+    @command('\x14')        # ^T
     def DC4(self, c=None):
         """Device Control 4"""
         # NOT IMPLEMENTED
 
-    @command(b'\x15')       # ^U
+    @command('\x15')        # ^U
     def NAK(self, c=None):
         """Negative AcKnowledge"""
         # NOT IMPLEMENTED
 
-    @command(b'\x16')       # ^V
+    @command('\x16')        # ^V
     def SYN(self, c=None):
         """SYNchronous idle"""
         # NOT IMPLEMENTED
 
-    @command(b'\x17')       # ^W
+    @command('\x17')        # ^W
     def ETB(self, c=None):
         """End of Transmission Block"""
         # NOT IMPLEMENTED
 
-    @command(b'\x19')       # ^Y
+    @command('\x19')        # ^Y
     def EM(self, c=None):
         """End of Medium"""
         # NOT IMPLEMENTED
 
-    @command(b'\x1c')       # ^\
+    @command('\x1c')        # ^\
     def FS(self, c=None):
         """File Separator (IS4)"""
         # NOT IMPLEMENTED
 
-    @command(b'\x1d')       # ^]
+    @command('\x1d')        # ^]
     def GS(self, c=None):
         """Group Separator (IS3)"""
         # NOT IMPLEMENTED
 
-    @command(b'\x1e')       # ^^
+    @command('\x1e')        # ^^
     def RS(self, c=None):
         """Record Separator (IS2)"""
         # NOT IMPLEMENTED
 
-    @command(b'\x1f')       # ^_
+    @command('\x1f')        # ^_
     def US(self, c=None):
         """Unit Separator (IS1)"""
         # NOT IMPLEMENTED
 
     # --------------------
 
-    # no @escape(b'0')
-    # no @escape(b'1')
-    # no @escape(b'2')
-    # no @escape(b'3')
-    # no @escape(b'4')
-    # no @escape(b'5')
-    # no @escape(b'6')
-    # no @escape(b'9')
-    # no @escape(b':')
-    # no @escape(b';')
-    # no @escape(b'<')
-    # no @escape(b'?')
-    # no @escape(b'@')
-    # no @escape(b'A')
+    # no @escape('0')
+    # no @escape('1')
+    # no @escape('2')
+    # no @escape('3')
+    # no @escape('4')
+    # no @escape('5')
+    # no @escape('6')
+    # no @escape('9')
+    # no @escape(':')
+    # no @escape(';')
+    # no @escape('<')
+    # no @escape('?')
+    # no @escape('@')
+    # no @escape('A')
 
-    @escape(b'B')
+    @escape('B')
     def BPH(self, command=None, param=None):
         """Break Permitted Here"""
         # NOT IMPLEMENTED
 
-    @escape(b'C')
+    @escape('C')
     def NBH(self, command=None, param=None):
         """No Break Here"""
         # NOT IMPLEMENTED
 
-    @escape(b'F')
+    @escape('F')
     def SSA(self, command=None, param=None):
         """Start of Selected Area"""
         # NOT IMPLEMENTED
 
-    @escape(b'G')
+    @escape('G')
     def ESA(self, command=None, param=None):
         """End of Selected Area"""
         # NOT IMPLEMENTED
 
-    @escape(b'I')
+    @escape('I')
     def HTJ(self, command=None, param=None):
         """Character Tabulation with Justification"""
         # NOT IMPLEMENTED
 
-    @escape(b'J')
+    @escape('J')
     def VTS(self, command=None, param=None):
         """Veritical Tab Set"""
         # NOT IMPLEMENTED
 
-    @escape(b'K')
+    @escape('K')
     def PLD(self, command=None, param=None):
         """Partial Line forward (Down)"""
         # NOT IMPLEMENTED
 
-    @escape(b'L')
+    @escape('L')
     def PLU(self, command=None, param=None):
         """Partial Line backward (Up)"""
         # NOT IMPLEMENTED
 
-    @escape(b'Q')
+    @escape('Q')
     def PU1(self, command=None, param=None):
         """Private Use 1"""
         # NOT IMPLEMENTED
 
-    @escape(b'R')
+    @escape('R')
     def PU2(self, command=None, param=None):
         """Private Use 2"""
         # NOT IMPLEMENTED
 
-    @escape(b'S')
+    @escape('S')
     def STS(self, command=None, param=None):
         """Set Transmit State"""
         # NOT IMPLEMENTED
 
-    @escape(b'T')
+    @escape('T')
     def CCH(self, command=None, param=None):
         """Cancel CHaracter"""
         # NOT IMPLEMENTED
 
-    @escape(b'U')
+    @escape('U')
     def MW(self, command=None, param=None):
         """Message Waiting"""
         # NOT IMPLEMENTED
 
-    @escape(b'V')
+    @escape('V')
     def SPA(self, c=None):
         """Start of guarded (Protected) Area"""
         # NOT IMPLEMENTED
 
-    @escape(b'W')
+    @escape('W')
     def EPA(self, c=None):
         """End of guarded (Protected) Area"""
         # NOT IMPLEMENTED
 
-    # no @escape(b'Y')
+    # no @escape('Y')
 
-    @escape(b'Z')
+    @escape('Z')
     def SCI(self, c=None):
         """Single Character Introducer"""
         # NOT IMPLEMENTED
 
-    @escape(b'a')
+    @escape('a')
     def INT(self, command=None, param=None):
         """INTerrupt"""
         # NOT IMPLEMENTED
 
-    @escape(b'b')
+    @escape('b')
     def EMI(self, command=None, param=None):
         """Enable Manual Input"""
         # NOT IMPLEMENTED
 
-    @escape(b'c')
+    @escape('c')
     def RIS(self, command=None, param=None):
         """Reset to Initial State"""
         # NOT IMPLEMENTED
         # TODO
 
-    @escape(b'd')
+    @escape('d')
     def CMD(self, command=None, param=None):
         """Coding Method Delimiter"""
         # NOT IMPLEMENTED
 
     # --------------------
 
-    @control(b'N')
+    @control('N')
     def EF(self, command=None, param=None):
         """Erase in Field"""
         # NOT IMPLEMENTED
 
-    @control(b'O')
+    @control('O')
     def EA(self, command=None, param=None):
         """Erase in Area"""
         # NOT IMPLEMENTED
 
-    @control(b'Q')
+    @control('Q')
     def SSE(self, command=None, param=None):
         # NOT IMPLEMENTED
         pass
 
-    @control(b'R')
+    @control('R')
     def CPR(self, command=None, param=None):
         """Active Position Report"""
         # NOT IMPLEMENTED
 
-    @control(b'U')
+    @control('U')
     def NP(self, command=None, param=None):
         """Next Page"""
         # NOT IMPLEMENTED
 
-    @control(b'V')
+    @control('V')
     def PP(self, command=None, param=None):
         """Previous Page"""
         # NOT IMPLEMENTED
 
-    @control(b'W')
+    @control('W')
     def CTC(self, command=None, param=None):
         """Cursor Tabulation Control"""
         # NOT IMPLEMENTED
 
-    @control(b'Y')
+    @control('Y')
     def CVT(self, command=None, param=None):
         """Cursor Line Tabulation"""
         # NOT IMPLEMENTED
 
-    @control(b'[')
+    @control('[')
     def SRS(self, command=None, param=None):
         """Start Reversed String"""
         # NOT IMPLEMENTED
 
-    @control(b'\\')
+    @control('\\')
     def PTX(self, command=None, param=None):
         """Parallel Texts"""
         # NOT IMPLEMENTED
 
-    @control(b']')
+    @control(']')
     def SDS(self, command=None, param=None):
         """Start Directed String"""
         # NOT IMPLEMENTED
 
-    @control(b'^')
+    @control('^')
     def SIMD(self, command=None, param=None):
         """Select Implicit Movement Direction"""
         # NOT IMPLEMENTED
 
-    # no @control(b'_')
+    # no @control('_')
 
-    @control(b'o')
+    @control('o')
     def DAQ(self, command=None, param=None):
         """Define Area Qualification"""
         # NOT IMPLEMENTED
