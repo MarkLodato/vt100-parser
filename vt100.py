@@ -109,8 +109,7 @@ class Terminal:
         cursor to the next position.  If the current position is past the end
         of the line, starts a new line."""
         if self.col >= self.width:
-            self.CR()
-            self.LF()
+            self.NEL()
         c = Character(c, self.attr)
         self.screen[self.pos] = c
         self.CUF()
@@ -214,8 +213,7 @@ class Terminal:
     def HT(self, c=None):
         """Horizontal Tab"""
         if self.col >= self.width:
-            self.CR()
-            self.LF()
+            self.NEL()
         while self.col < self.width-1:
             self.col += 1
             if self.tabstops[self.col]:
@@ -224,10 +222,7 @@ class Terminal:
     @command('\x0a')        # ^J
     def LF(self, c=None):
         """Line Feed"""
-        if self.row < self.height - 1:
-            self.row += 1
-        else:
-            self.scroll(1)
+        self.IND()
 
     @command('\x0b')        # ^K
     def VT(self, c=None):
@@ -288,13 +283,16 @@ class Terminal:
     @escape('D')
     def IND(self, c=None):
         """Index"""
-        self.LF()
+        if self.row < self.height - 1:
+            self.row += 1
+        else:
+            self.scroll(1)
 
     @escape('E')
     def NEL(self, c=None):
         """Next Line"""
-        self.LF()
-        self.CR()
+        self.IND()
+        self.col = 0
 
     @escape('H')
     def HTS(self, c=None):
@@ -420,13 +418,13 @@ class Terminal:
     def CNL(self, command=None, param=None):
         """Cursor Next Line"""
         self.CUD(command, param)
-        slef.CR()
+        self.col = 0
 
     @control('F')
     def CPL(self, command=None, param=None):
         """Cursor Previous Line"""
         self.CUU(command, param)
-        slef.CR()
+        self.col = 0
 
     @control('G')
     def CHA(self, command=None, param=None):
