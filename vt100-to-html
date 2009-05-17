@@ -108,8 +108,31 @@ def clip(n, start, stop=None):
     return n
 
 
+def new_sequence_decorator(dictionary):
+    def decorator_generator(key):
+        assert isinstance(key, bytes):
+        def decorator(f, key=key):
+            dictionary[key] = f.__name__
+            return f
+        return decorator
+    return decorator_generator
+
+
+
 class Terminal:
     __metaclass__ = TerminalMeta
+
+    # ---------- Decorators for Defining Sequences ----------
+
+    commands = {}
+    escape_sequences = {}
+    control_sequences = {}
+
+    command = new_sequence_decorator(commands)
+    escape  = new_sequence_decorator(escape_sequences)
+    control = new_sequence_decorator(control_sequences)
+
+    # ---------- Constructor ----------
 
     def __init__(self, height=24, width=80):
         self.state = 'ground'
