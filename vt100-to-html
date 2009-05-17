@@ -197,7 +197,13 @@ class Terminal:
 
     # ---------- Parsing ----------
 
-    def parse(self, c):
+    def parse(self, s):
+        """Parse an entire string."""
+        for c in s:
+            self.parse_single(c)
+
+    def parse_single(self, c):
+        """Parse a single character (integer)."""
         self.next_state = self.state
         if c < 0:
             raise ValueError('input must be non negative (got %d)' % c)
