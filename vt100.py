@@ -67,7 +67,6 @@ def new_sequence_decorator(dictionary):
 
 
 class Terminal:
-    __metaclass__ = TerminalMeta
 
     # ---------- Decorators for Defining Sequences ----------
 
