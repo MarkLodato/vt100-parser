@@ -3,6 +3,7 @@
 # Requires Python 2.6
 from __future__ import print_function
 
+import itertools
 import re
 import sys
 import numpy as np
@@ -17,6 +18,8 @@ class Character:
         self.char = char
         self.attr = attr
     def __repr__(self):
+        return str(self.char)
+    def __str__(self):
         return str(self.char)
 
 class InvalidParameterListError (RuntimeError):
@@ -192,6 +195,31 @@ class Terminal:
             self.execute(c)
         else:
             self.output(c)
+
+    # ---------- Output ----------
+
+    def to_string(self, history=True, screen=True, remove_blank_end=True):
+        """Return a string form of the history and the current screen."""
+        # TODO use attributes / formatter
+        input = []
+        if history:
+            input.append(self.history)
+        if screen:
+            input.append(self.screen)
+        if not input:
+            return
+        lines = itertools.chain(*input)
+        def f(line):
+            s = ''.join(x.char if x is not None else '\0'
+                        for x in line)
+            return s.rstrip('\0').replace('\0',' ')
+        s = '\n'.join(map(f, lines))
+        if remove_blank_end:
+            s = s.rstrip('\n')
+        return s + '\n'
+
+    def print_screen(self):
+        print(self.to_string(False, True, False), end='')
 
     # ---------- Single-character commands (C0) ----------
 
