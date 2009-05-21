@@ -658,7 +658,7 @@ class Terminal:
     def cancel_control_string(self):
         self.next_state = 'ground'
 
-    def ignore_control_string(self):
+    def ignore_control_string(self, *args):
         """Called when a control string is ignored."""
         pass
 
