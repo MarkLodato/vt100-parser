@@ -492,7 +492,17 @@ class Terminal:
         Ps = 2  -> Erase All
         Ps = 3  -> Erase Saved Lines (xterm)
         """
-        # NOT IMPLEMENTED
+        # TODO param =~ ^\?   selective erase
+        n = param_list(param, 0)[0]
+        if n == 0:
+            self.screen[self.row, self.col:] = None
+            self.screen[self.row+1:, :] = None
+        elif n == 1:
+            self.screen[:self.row, :] = None
+            self.screen[self.row, :self.col+1] = None
+        elif n == 2:
+            self.screen[:] = None
+        # no plans to implement 3
 
     @control('K')
     def EL(self, command=None, param=None):
@@ -502,38 +512,59 @@ class Terminal:
         Ps = 1  -> Erase to Left
         Ps = 2  -> Erase All
         """
-        # NOT IMPLEMENTED
-        # Note: param might be ? for selective
+        # TODO param =~ ^\?   selective erase
+        n = param_list(param, 0)[0]
+        if n == 0:
+            self.screen[self.row, self.col:] = None
+        elif n == 1:
+            self.screen[self.row, :self.col+1] = None
+        elif n == 2:
+            self.screen[self.row, :] = None
 
     @control('L')
     def IL(self, command=None, param=None):
         """Insert Line(s)"""
-        # NOT IMPLEMENTED
+        # TODO scroll region?
+        n = param_list(param, 1)[0]
+        self.scroll(n, bottom=self.row)
+        self.CUU(param=str(n))
 
     @control('M')
     def DL(self, command=None, param=None):
         """Delete Line(s)"""
-        # NOT IMPLEMENTED
+        # TODO scroll region?
+        n = param_list(param, 1)[0]
+        self.scroll(n, top=self.row)
 
     @control('P')
     def DCH(self, command=None, param=None):
         """Delete Character(s)"""
-        # NOT IMPLEMENTED
+        n = param_list(param, 1)[0]
+        r = self.row
+        c = self.col
+        self.screen[r,c:-n] = self.screen[r,c+n:]
+        self.screen[r,-n:] = None
 
     @control('S')
     def SU(self, command=None, param=None):
         """Scroll Up"""
-        # NOT IMPLEMENTED
+        # TODO scroll region?
+        n = param_list(param, 1)[0]
+        self.scroll(n)
 
     @control('T')
     def SD(self, command=None, param=None):
         """Scroll Down / Mouse Tracking"""
-        # NOT IMPLEMENTED
+        # TODO scroll region?
+        # TODO mouse tracking
+        n = param_list(param, 1)[0]
+        self.scroll(-n)
 
     @control('X')
     def ECH(self, command=None, param=None):
         """Erase Character"""
-        # NOT IMPLEMENTED
+        n = param_list(param, 1)[0]
+        self.screen[self.row, self.col:self.col+n] = None
 
     @control('Z')
     def CBT(self, command=None, param=None):
