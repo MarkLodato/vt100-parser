@@ -114,24 +114,34 @@ class Terminal:
         self.screen[self.pos] = c
         self.CUF()
 
-    def scroll(self, n):
-        """Scroll the scrolling region n lines upward (data moves up)."""
+    def scroll(self, n, top = None, bottom = None):
+        """Scroll the scrolling region n lines upward (data moves up) between
+        rows top (inclusive, default 0) and bottom (exclusive, default
+        height).  Any data moved off the top of the screen (if top is 0) is
+        saved to the history."""
         # TODO scroll region
-        if n == 0:
-            return
-        empty = self.width
+        if top is None:
+            top = 0
+        if bottom is None:
+            bottom = self.height
+        s = self.screen
+        height = bottom-top
         if n > 0:
-            self.history.append( s[:n].copy() )
-            if n > self.height:
+            # TODO transform history?
+            if top == 0:
+                self.history.extend( s[:n].copy() )
+            if n > height:
+                extra = n - self.height
+                self.history.extend( [[None]*self.width]*extra )
                 n = self.height
-            s[0:-n] = s[n:]
-            s[-n:] = [empty] * n
-        else:
+            s[top:bottom-n] = s[top+n:bottom]
+            s[bottom-n:bottom] = None
+        elif n < 0:
             n = -n
             if n > self.height:
                 n = self.height
-            s[n:] = s[0:-n]
-            s[:n] = [empty] * n
+            s[top+n:bottom] = s[top:bottom-n]
+            s[top:top+n] = None
 
     def ignore(self, c):
         """Ignore the character."""
