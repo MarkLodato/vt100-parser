@@ -629,18 +629,18 @@ class Terminal:
 
     def parse_control_string(self, c):
         # Consume the whole string and pass it to the process function.
-        if c in (0x18, 0x1a):
+        if c in '\x18\x1a':
             # CAN and SUB quit the string
             self.cancel_control_string()
             # should we self.execute(c) ?
-        elif c == 0x07 and self.state == 'osc':
+        elif c == '\x07' and self.state == 'osc':
             # NOTE: xterm ends OSC with BEL, in addition to ESC \
             self.finish_control_string()
-        elif self.collected and self.collected[-1] == 0x1b:
+        elif self.collected and self.collected[-1] == '\x1b':
             # NOTE: xterm consumes the character after the ESC always, but
             # only process it if it is '\'.  Not sure about VTxxx.
             self.collected = self.collected[:-1]
-            if c == 0x5c:
+            if c == '\x5c':
                 self.finish_control_string()
             else:
                 self.cancel_control_string()
