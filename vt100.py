@@ -2,8 +2,8 @@
 
 # Requires Python 2.6
 
-import sys, os
 import re
+import sys
 import numpy as np
 
 
