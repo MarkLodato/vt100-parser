@@ -7,6 +7,7 @@ import itertools
 import re
 import sys
 import numpy as np
+from optparse import OptionParser
 
 
 __metaclass__ = type
@@ -1131,4 +1132,25 @@ class Terminal:
 
 
 if __name__ == "__main__":
-    pass
+    usage = "%prog (filename|-)"
+    parser = OptionParser(usage=usage)
+    parser.add_option('--non-script', action='store_true', default=False,
+            help='Do not ignore "Script (started|done) on <date>" lines')
+    options, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error('missing required filename argument')
+    filename, = args
+    if filename == '-':
+        f = sys.stdin
+    else:
+        f = open(filename, 'rb')
+    t = Terminal()
+    script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
+            r'\d\d:\d\d:\d\d \w+ \w+$')
+    for line in f:
+        if not options.non_script and script_re.match(line):
+            continue
+        t.parse(line)
+    print(t.to_string(), end='')
+    if filename != '-':
+        f.close()
