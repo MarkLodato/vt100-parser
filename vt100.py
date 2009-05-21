@@ -167,19 +167,13 @@ class Terminal:
         self.transition()
 
     def transition(self):
-        try:
-            f = getattr(self, 'leave_%s' % self.state)
-        except AttributeError:
-            pass
-        else:
+        f = getattr(self, 'leave_%s' % self.state, None)
+        if f is not None:
             f(self.next_state)
         self.next_state, self.state, self.prev_state = (None,
                 self.next_state, self.state)
-        try:
-            f = getattr(self, 'enter_%s' % self.state)
-        except AttributeError:
-            pass
-        else:
+        f = getattr(self, 'enter_%s' % self.state, None)
+        if f is not None:
             f(self.prev_state)
 
     def parse_ground(self, c):
@@ -193,10 +187,11 @@ class Terminal:
     def execute(self, c):
         """Execute a C0 command."""
         name = self.commands.get(c, None)
-        if name is None:
+        f = None
+        if name is not None:
+            f = getattr(self, name, None)
+        if f is None:
             f = self.ignore
-        else:
-            f = getattr(self, name, self.ignore)
         f(c)
 
     @command('\x07')        # ^G
@@ -273,10 +268,11 @@ class Terminal:
     def dispatch_escape(self, c):
         command = self.collected + c
         name = self.escape_sequences.get(c, None)
-        if name is None:
+        f = None
+        if name is not None:
+            f = getattr(self, name, None)
+        if f is None:
             f = self.ignore
-        else:
-            f = getattr(self, name, self.ignore)
         f(command)
 
 
@@ -367,10 +363,11 @@ class Terminal:
         param, command = m.groups()
 
         name = self.control_sequences.get(command, None)
-        if name is None:
+        f = None
+        if name is not None:
+            f = getattr(self, name, None)
+        if f is None:
             f = self.ignore_control_sequence
-        else:
-            f = getattr(self, name, self.ignore_control_sequence)
         try:
             f(command, param)
         except InvalidParameterListError:
@@ -652,7 +649,9 @@ class Terminal:
 
     def finish_control_string(self):
         name = 'finish_%s' % self.state
-        f = getattr(self, name, self.ignore_control_string)
+        f = getattr(self, name, None)
+        if f is None:
+            f = self.ignore_control_string
         f(self.collected)
         self.next_state = 'ground'
 
