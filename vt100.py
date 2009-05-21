@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Requires Python 2.6
+from __future__ import print_function
 
 import re
 import sys
