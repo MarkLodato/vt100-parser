@@ -94,6 +94,7 @@ class Terminal:
         self.screen = np.array([[None] * width] * height, dtype=object)
         self.row = 0
         self.col = 0
+        self.previous = '\0'
         self.tabstops = [(i%8)==0 for i in range(width)]
         self.attr = None
         self.clear()
@@ -178,6 +179,7 @@ class Terminal:
             raise RuntimeError("internal error: unknown state %s" %
                     repr(self.state))
         self.next_state = self.state
+        self.previous = c
         f(c)
         self.transition()
 
@@ -589,7 +591,10 @@ class Terminal:
     @control('b')
     def REP(self, command=None, param=None):
         """Repeat"""
-        # NOT IMPLEMENTED
+        n = param_list(param, 1)[0]
+        if ord(self.previous) >= 0x20:
+            for i in range(n):
+                self.output(self.previous)
 
     @control('d')
     def VPA(self, command=None, param=None):
