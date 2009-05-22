@@ -767,7 +767,7 @@ class Terminal:
 
     @command('\x05')       # ^E
     def ENQ(self, c=None):
-        """ENQuiry"""
+        """Enquiry"""
         return NotImplemented
 
     @command('\x0e')       # ^N
