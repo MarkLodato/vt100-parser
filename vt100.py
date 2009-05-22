@@ -84,7 +84,8 @@ class Terminal:
 
     # ---------- Constructor ----------
 
-    def __init__(self, height=24, width=80):
+    def __init__(self, height=24, width=80, verbosity=False):
+        self.verbosity = verbosity
         self.state = 'ground'
         self.prev_state = None
         self.next_state = None
@@ -151,7 +152,7 @@ class Terminal:
 
     def ignore(self, c):
         """Ignore the character."""
-        pass
+        self.debug(1, 'ignoring character: %s' % repr(c))
 
     def collect(self, c):
         """Record the character as an intermediate."""
@@ -161,6 +162,11 @@ class Terminal:
         """Since most enter_* functions just call self.clear(), this is a
         common function so that you can set enter_foo = clear_on_enter."""
         self.clear()
+
+    def debug(self, level, *args, **kwargs):
+        if self.verbosity >= level:
+            kwargs.setdefault('file', sys.stderr)
+            print(*args, **kwargs)
 
     # ---------- Parsing ----------
 
@@ -417,11 +423,13 @@ class Terminal:
 
     def invalid_control_sequence(self):
         """Called when the control sequence is invalid."""
-        pass
+        self.debug(0, 'invalid control sequence: %s'
+                % (repr(self.collected)))
 
     def ignore_control_sequence(self, command, param):
         """Called when the control sequence is ignored."""
-        pass
+        self.debug(1, 'ignoring control sequence: %s, %s'
+                % (repr(command), repr(param)))
 
 
     @control('@')
@@ -736,7 +744,8 @@ class Terminal:
 
     def ignore_control_string(self, *args):
         """Called when a control string is ignored."""
-        pass
+        self.debug(1, 'ignoring %s control string: %s' % (self.state,
+            repr(args)))
 
 
 
@@ -1170,9 +1179,15 @@ class Terminal:
 if __name__ == "__main__":
     usage = "%prog (filename|-)"
     parser = OptionParser(usage=usage)
+    parser.add_option('-q', '--quiet', action='count', default=0,
+            help='Decrease debugging verbosity.')
+    parser.add_option('-v', '--verbose', action='count', default=0,
+            help='Increase debugging verbosity.')
     parser.add_option('--non-script', action='store_true', default=False,
             help='Do not ignore "Script (started|done) on <date>" lines')
     options, args = parser.parse_args()
+    options.verbose -= options.quiet
+    del options.quiet
     if len(args) != 1:
         parser.error('missing required filename argument')
     filename, = args
@@ -1180,7 +1195,7 @@ if __name__ == "__main__":
         f = sys.stdin
     else:
         f = open(filename, 'rb')
-    t = Terminal()
+    t = Terminal(verbosity=options.verbose)
     script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
             r'\d\d:\d\d:\d\d \w+ \w+$')
     for line in f:
