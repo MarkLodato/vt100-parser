@@ -1259,7 +1259,12 @@ if __name__ == "__main__":
             help='Increase debugging verbosity.')
     parser.add_option('--non-script', action='store_true', default=False,
             help='Do not ignore "Script (started|done) on <date>" lines')
+    parser.add_option('--man', action='store_true', default=False,
+            help='Print the manual page and quit.')
     options, args = parser.parse_args()
+    if options.man:
+        print(globals()['__doc__'])
+        sys.exit(0)
     options.verbose -= options.quiet
     del options.quiet
     if len(args) != 1:
