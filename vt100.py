@@ -192,14 +192,16 @@ class Terminal:
         self.transition()
 
     def transition(self):
-        f = getattr(self, 'leave_%s' % self.state, None)
-        if f is not None:
-            f(self.next_state)
+        if self.next_state != self.state:
+            f = getattr(self, 'leave_%s' % self.state, None)
+            if f is not None:
+                f(self.next_state)
         self.next_state, self.state, self.prev_state = (None,
                 self.next_state, self.state)
-        f = getattr(self, 'enter_%s' % self.state, None)
-        if f is not None:
-            f(self.prev_state)
+        if self.state != self.prev_state:
+            f = getattr(self, 'enter_%s' % self.state, None)
+            if f is not None:
+                f(self.prev_state)
 
     def parse_ground(self, c):
         if ord(c) < 0x20:
