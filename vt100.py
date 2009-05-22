@@ -244,7 +244,9 @@ class Terminal:
             f = getattr(self, name, None)
         if f is None:
             f = self.ignore
-        f(c)
+        r = f(c)
+        if r is NotImplemented:
+            self.debug(0, 'command not implemented: %s' % f.__name__)
 
     @command('\x07')        # ^G
     def BEL(self, c=None):
@@ -325,7 +327,9 @@ class Terminal:
             f = getattr(self, name, None)
         if f is None:
             f = self.ignore
-        f(command)
+        r = f(command)
+        if r is NotImplemented:
+            self.debug(0, 'escape not implemented: %s' % f.__name__)
 
 
     @escape('D')
@@ -421,7 +425,10 @@ class Terminal:
         if f is None:
             f = self.ignore_control_sequence
         try:
-            f(command, param)
+            r = f(command, param)
+            if r is NotImplemented:
+                self.debug(0, 'control sequence not implemented: %s'
+                              % f.__name__)
         except InvalidParameterListError:
             self.invalid_control_sequence()
 
