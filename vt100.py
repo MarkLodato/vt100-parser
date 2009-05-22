@@ -35,6 +35,8 @@ def param_list(s, default, zero_is_default=True, min_length=1):
         value = int(token)
         if zero_is_default and value == 0:
             return default
+        if value < 0:
+            raise ValueError
         return value
     if s is None:
         l = []
