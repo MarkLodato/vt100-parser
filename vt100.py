@@ -439,7 +439,7 @@ class Terminal:
     @control('@')
     def ICH(self, command=None, param=None):
         """Insert (blank) Characters"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('A')
     def CUU(self, command=None, param=None):
@@ -636,7 +636,7 @@ class Terminal:
     @control('h')
     def SM(self, command=None, param=None):
         """Set Mode"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('j')
     def HPB(self, command=None, param=None):
@@ -651,45 +651,45 @@ class Terminal:
     @control('l')
     def RM(self, command=None, param=None):
         """Reset Mode"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('m')
     def SGR(self, command=None, param=None):
         """Set Graphics Attributes"""
-        # NOT IMPLEMENTED
+        return NotImplemented
         # TODO '>m' xterm
 
     @control('!p')
     def DECSTR(self, command=None, param=None):
         """Soft Terminal Reset"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('r')
     def DECSTBM(self, command=None, param=None):
         """Set Scrolling Region"""
-        # NOT IMPLEMENTED
+        return NotImplemented
         # Note: with param = "? Pm", restore DEC private mode values
 
     @control('$r')
     def DECCARA(self, command=None, param=None):
         """Change Attributes in Rectangular Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('s')
     def save_cursor(self, command=None, param=None):
         """Save cursor"""
-        # NOT IMPLEMENTED
+        return NotImplemented
         # Note: with param = "? Pm", set DEC private mode values
 
     @control('$t')
     def DECRARA(self, command=None, param=None):
         """Reverse Attributes in Rectangular Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('u')
     def restore_cursor(self, command=None, param=None):
         """Restore cursor"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # TODO more from ctlseqs.txt
 
@@ -761,74 +761,74 @@ class Terminal:
     @command('\x05')       # ^E
     def ENQ(self, c=None):
         """ENQuiry"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x0e')       # ^N
     def SO(self, c=None):
         """Shift Out (LS1)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x0f')       # ^O
     def SI(self, c=None):
         """Shift In (LS0)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # --------------------
 
     @escape('7')
     def DECSC(self, c=None):
         """Save Cursor"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('8')
     def DECRC(self, c=None):
         """Restore Cursor"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('=')
     def DECPAM(self, command=None, param=None):
         """Application Keypad"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('>')
     def DECPNM(self, command=None, param=None):
         """Normal Keypad"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('N')
     def SS2(self, c=None):
         """Single Shift 2"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('O')
     def SS3(self, c=None):
         """Single Shift 3"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape(' F')
     def S7C1T(self, c=None):
         """7-bit controls"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape(' G')
     def S8C1T(self, c=None):
         """8-bit controls"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape(' L')
     def set_ansi_level_1(self, c=None):
         """Set ANSI conformance level 1"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape(' M')
     def set_ansi_level_2(self, c=None):
         """Set ANSI conformance level 2"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape(' N')
     def set_ansi_level_3(self, c=None):
         """Set ANSI conformance level 3"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # ESC # 3   DEC double-height line, top half (DECDHL)
     # ESC # 4   DEC double-height line, bottom half (DECDHL)
@@ -860,34 +860,34 @@ class Terminal:
     @control('c')
     def DA(self, command=None, param=None):
         """Send Device Attributes"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('i')
     def MC(self, command=None, param=None):
         """Media Copy"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('n')
     def DSR(self, command=None, param=None):
         """Device Status Report"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # @control('p') with '>': xterm pointer mode
 
     @control('"p')
     def DECSCL(self, command=None, param=None):
         """Set Conformance Level"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('"q')
     def DECSCA(self, command=None, param=None):
         """Set Character protection Attribute"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('t')
     def window_manipulation(self, command=None, param=None):
         """Window manipulation"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # ================================================================
     #                  Things not implemented by xterm.
@@ -896,97 +896,97 @@ class Terminal:
     @command('\x00')        # ^@
     def NUL(self, c=None):
         """NULl"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x01')        # ^A
     def SOH(self, c=None):
         """Start Of Heading"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x02')        # ^B
     def STX(self, c=None):
         """Start of TeXt"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x03')        # ^C
     def ETX(self, c=None):
         """End of TeXt"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x04')        # ^D
     def EOT(self, c=None):
         """End Of Transmission"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x06')        # ^F
     def ACK(self, c=None):
         """ACKnowledge"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x10')        # ^P
     def DLE(self, c=None):
         """Data Link Escape"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x11')        # ^Q
     def DC1(self, c=None):
         """Device Control 1"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x12')        # ^R
     def DC2(self, c=None):
         """Device Control 2"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x13')        # ^S
     def DC3(self, c=None):
         """Device Control 3"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x14')        # ^T
     def DC4(self, c=None):
         """Device Control 4"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x15')        # ^U
     def NAK(self, c=None):
         """Negative AcKnowledge"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x16')        # ^V
     def SYN(self, c=None):
         """SYNchronous idle"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x17')        # ^W
     def ETB(self, c=None):
         """End of Transmission Block"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x19')        # ^Y
     def EM(self, c=None):
         """End of Medium"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x1c')        # ^\
     def FS(self, c=None):
         """File Separator (IS4)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x1d')        # ^]
     def GS(self, c=None):
         """Group Separator (IS3)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x1e')        # ^^
     def RS(self, c=None):
         """Record Separator (IS2)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @command('\x1f')        # ^_
     def US(self, c=None):
         """Unit Separator (IS1)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # --------------------
 
@@ -1008,174 +1008,174 @@ class Terminal:
     @escape('B')
     def BPH(self, command=None, param=None):
         """Break Permitted Here"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('C')
     def NBH(self, command=None, param=None):
         """No Break Here"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('F')
     def SSA(self, command=None, param=None):
         """Start of Selected Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('G')
     def ESA(self, command=None, param=None):
         """End of Selected Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('I')
     def HTJ(self, command=None, param=None):
         """Character Tabulation with Justification"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('J')
     def VTS(self, command=None, param=None):
         """Veritical Tab Set"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('K')
     def PLD(self, command=None, param=None):
         """Partial Line forward (Down)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('L')
     def PLU(self, command=None, param=None):
         """Partial Line backward (Up)"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('Q')
     def PU1(self, command=None, param=None):
         """Private Use 1"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('R')
     def PU2(self, command=None, param=None):
         """Private Use 2"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('S')
     def STS(self, command=None, param=None):
         """Set Transmit State"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('T')
     def CCH(self, command=None, param=None):
         """Cancel CHaracter"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('U')
     def MW(self, command=None, param=None):
         """Message Waiting"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('V')
     def SPA(self, c=None):
         """Start of guarded (Protected) Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('W')
     def EPA(self, c=None):
         """End of guarded (Protected) Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # no @escape('Y')
 
     @escape('Z')
     def SCI(self, c=None):
         """Single Character Introducer"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('a')
     def INT(self, command=None, param=None):
         """INTerrupt"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('b')
     def EMI(self, command=None, param=None):
         """Enable Manual Input"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @escape('c')
     def RIS(self, command=None, param=None):
         """Reset to Initial State"""
-        # NOT IMPLEMENTED
+        return NotImplemented
         # TODO
 
     @escape('d')
     def CMD(self, command=None, param=None):
         """Coding Method Delimiter"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # --------------------
 
     @control('N')
     def EF(self, command=None, param=None):
         """Erase in Field"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('O')
     def EA(self, command=None, param=None):
         """Erase in Area"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('Q')
     def SSE(self, command=None, param=None):
-        # NOT IMPLEMENTED
+        return NotImplemented
         pass
 
     @control('R')
     def CPR(self, command=None, param=None):
         """Active Position Report"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('U')
     def NP(self, command=None, param=None):
         """Next Page"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('V')
     def PP(self, command=None, param=None):
         """Previous Page"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('W')
     def CTC(self, command=None, param=None):
         """Cursor Tabulation Control"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('Y')
     def CVT(self, command=None, param=None):
         """Cursor Line Tabulation"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('[')
     def SRS(self, command=None, param=None):
         """Start Reversed String"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('\\')
     def PTX(self, command=None, param=None):
         """Parallel Texts"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control(']')
     def SDS(self, command=None, param=None):
         """Start Directed String"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     @control('^')
     def SIMD(self, command=None, param=None):
         """Select Implicit Movement Direction"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
     # no @control('_')
 
     @control('o')
     def DAQ(self, command=None, param=None):
         """Define Area Qualification"""
-        # NOT IMPLEMENTED
+        return NotImplemented
 
 
 
