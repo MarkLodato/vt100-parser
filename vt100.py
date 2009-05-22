@@ -408,7 +408,7 @@ class Terminal:
 
     def dispatch_control_sequence(self, c):
         self.collect(c)
-        m = re.match('^([\x30-\x39]*)([\x20-\x29]*[\x40-\x7f])$',
+        m = re.match('^([\x30-\x3f]*)([\x20-\x2f]*[\x40-\x7f])$',
                      self.collected)
         if not m:
             return self.invalid_control_sequence()
