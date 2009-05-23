@@ -162,7 +162,7 @@ class Terminal:
         self.col = 0
         self.previous = '\0'
         self.tabstops = [(i%8)==0 for i in range(width)]
-        self.attr = None
+        self.attr = {}
         self.clear()
 
     # ---------- Utilities ----------
@@ -182,7 +182,7 @@ class Terminal:
         of the line, starts a new line."""
         if self.col >= self.width:
             self.NEL()
-        c = Character(c, self.attr)
+        c = Character(c, self.attr.copy())
         self.screen[self.pos] = c
         self.CUF()
 
@@ -726,8 +726,133 @@ class Terminal:
     @control('m')
     def SGR(self, command=None, param=None):
         """Set Graphics Attributes"""
-        return NotImplemented
         # TODO '>m' xterm
+        l = param_list(param, 0)
+        for n in l:
+            def color_256():
+                """xterm 256-color extension"""
+                # TODO options for:
+                #   256-color
+                #   88-color
+                #   16-color
+                #   8-color
+                # TODO customizable colors through osc
+                # TODO move data to class level so subclasses can modify
+                try:
+                    m = next(l)
+                    o = next(l)
+                except StopIteration:
+                    return
+                if m != 5:
+                    # xterm stops parsing if this happens
+                    self.debug(0, 'invalid 256-color attribute: %s %s %s' %
+                            (m,n,o))
+                    return
+                key = 'fg_color' if n < 40 else 'bg_color'
+                if o < 16:
+                    [
+                        set_attr(key, '#000000'),
+                        set_attr(key, '#cd0000'),
+                        set_attr(key, '#00cd00'),
+                        set_attr(key, '#cdcd00'),
+                        set_attr(key, '#0000e8'),
+                        set_attr(key, '#cd00cd'),
+                        set_attr(key, '#00cdcd'),
+                        set_attr(key, '#e5e5e5'),
+                        set_attr(key, '#7f7f7f'),
+                        set_attr(key, '#ff0000'),
+                        set_attr(key, '#00ff00'),
+                        set_attr(key, '#ffff00'),
+                        set_attr(key, '#5c5cff'),
+                        set_attr(key, '#ff00ff'),
+                        set_attr(key, '#00ffff'),
+                        set_attr(key, '#ffffff'),
+                    ][o]()
+                elif o < 232:
+                    o -= 16
+                    r, o = divmod(o, 36)
+                    g, o = divmod(o, 6)
+                    b = o
+                    r = r*40 + 55  if r else 0
+                    g = g*40 + 55  if g else 0
+                    b = b*40 + 55  if b else 0
+                    set_attr(key, '#%02x%02x%02x' % (r,g,b))
+                elif o < 256:
+                    gray = (o-232) * 10 + 8
+                    set_attr(key, '#%02x%02x%02x' % (gray,gray,gray))
+            def clear_all():
+                def f():
+                    self.attr.clear()
+                return f
+            def set_attr(key, value = True):
+                def f(key=key, value=value):
+                    self.attr[key] = value
+                return f
+            def clear_attr(key):
+                def f(key=key):
+                    try:
+                        del self.attr[key]
+                    except KeyError:
+                        pass
+                return f
+            try:
+                {
+                    0   : clear_all,
+                    1   : set_attr('weight', 'bold'),
+                    2   : set_attr('weight', 'faint'),
+                    3   : set_attr('style', 'italic'),
+                    4   : set_attr('underline', 'single'),
+                    5   : set_attr('blink', 'slow'),
+                    6   : set_attr('blink', 'rapid'),
+                    7   : set_attr('inverse'),
+                    8   : set_attr('hidden'),
+                    9   : set_attr('strikeout'),
+                    # 10-19 font stuff
+                    20  : set_attr('style', 'fraktur'),
+                    21  : set_attr('underline', 'double'),
+                    22  : clear_attr('weight'),
+                    23  : clear_attr('style'),
+                    24  : clear_attr('underline'),
+                    25  : clear_attr('blink'),
+                    # 26 reserved
+                    27  : clear_attr('inverse'),
+                    28  : clear_attr('hidden'),
+                    29  : clear_attr('strikeout'),
+                    30  : set_attr('fg_color', 'black'),
+                    31  : set_attr('fg_color', 'red'),
+                    32  : set_attr('fg_color', 'green'),
+                    33  : set_attr('fg_color', 'yellow'),
+                    34  : set_attr('fg_color', 'blue'),
+                    35  : set_attr('fg_color', 'magenta'),
+                    36  : set_attr('fg_color', 'cyan'),
+                    37  : set_attr('fg_color', 'white'),
+                    38  : color_256,
+                    39  : clear_attr('fg_color'),
+                    40  : set_attr('bg_color', 'black'),
+                    41  : set_attr('bg_color', 'red'),
+                    42  : set_attr('bg_color', 'green'),
+                    43  : set_attr('bg_color', 'yellow'),
+                    44  : set_attr('bg_color', 'blue'),
+                    45  : set_attr('bg_color', 'magenta'),
+                    46  : set_attr('bg_color', 'cyan'),
+                    47  : set_attr('bg_color', 'white'),
+                    48  : color_256,
+                    49  : clear_attr('bg_color'),
+                    # 50 reserved
+                    51  : set_attr('frame', 'box'),
+                    52  : set_attr('frame', 'circle'),
+                    53  : set_attr('overline'),
+                    54  : clear_attr('frame'),
+                    55  : clear_attr('overline'),
+                    # 56-59 reserved
+                    # 60-65 ideogram stuff
+                    # 90-107 xterm 16-color support enabled (light colors)
+                    # 100 xterm 16-color support disabled
+                }[n]()
+            except KeyError:
+                self.debug(0, 'unknown attribute: %s' % n)
+                pass
+
 
     @control('!p')
     def DECSTR(self, command=None, param=None):
@@ -773,6 +898,7 @@ class Terminal:
     enter_apc = clear_on_enter
     enter_pm  = clear_on_enter
 
+    # TODO OSC to set text parameters
     def parse_osc(self, c): self.parse_control_string(c)
     def parse_dsc(self, c): self.parse_control_string(c)
     def parse_sos(self, c): self.parse_control_string(c)
