@@ -80,8 +80,80 @@ def format_text(line, eol='\n'):
     return ''.join(x.char for x in line) + eol
 
 
+html_attr_map = {
+        'fg_color'  : ('color', None),
+        'bg_color'  : ('background-color', None),
+        'weight'    : ('font-weight', {'bold':'bold', 'feint':'lighter'}),
+        'underline' : ('text-decoration', 'underline'), # TODO double
+        'style'     : ('font-style', {'italic':'italic'}),
+        'blink'     : ('text-decoration', 'blink'), # no fast or slow
+        'hidden'    : ('display', 'hidden'),
+        'strikeout' : ('text-decoration', 'line-through'),
+        'overline'  : ('text-decoration', 'overlie'),
+        # TODO frame
+        }
+
+html_default = {
+        'color' : set(),
+        'background-color' : set(),
+        'font-weight' : set(),
+        'font-style' : set(),
+        'text-decoration' : set(),
+        'display' : set(),
+        }
+
+def apply_attr_map(attr, mapping):
+    out = {}
+    for key,value in attr.iteritems():
+        try:
+            mapping_value = mapping[key]
+        except KeyError:
+            # TODO verbose option?
+            print('unknown attribute: %s' % key, f=sys.stderr)
+            continue
+        key, v_mapping = mapping_value
+        if isinstance(v_mapping, basestring):
+            value = v_mapping
+        elif v_mapping is not None:
+            try:
+                value = v_mapping[value]
+            except KeyError:
+                # TODO verbose option?
+                # TODO save original key value
+                print('unknown value: %s:%s' % (key, value), f=sys.stderr)
+                continue
+        out.setdefault(key, set()).add(value)
+    return out
+
+
+def format_html_attr(attr):
+    # TODO implement inverse
+    mapped_attr = apply_attr_map(attr, html_attr_map)
+    return '; '.join(
+            "%s: %s" % (k, ' '.join(sorted(mapped_attr[k])))
+            for k in sorted(mapped_attr.keys())
+            )
+
+def format_html(line, eol='\n'):
+    out = []
+    last_style = ''
+    for c in line:
+        style = format_html_attr(c.attr)
+        if style != last_style:
+            if last_style:
+                out.append('</span>')
+            if style:
+                out.append('<span style="%s">' % style)
+            last_style = style
+        out.append(c.char)
+    if last_style:
+        out.append('</span>')
+    out.append(eol)
+    return ''.join(out)
+
 formatters = {
         'text' : ('', format_text, ''),
+        'html' : ('<pre>\n', format_html, '</pre>\n'),
         }
 
 
@@ -1422,8 +1494,8 @@ if __name__ == "__main__":
     usage = "%prog (filename|-)"
     parser = OptionParser(usage=usage)
     parser.add_option('-f', '--format', default='text',
-            choices=('text',),
-            help='Output format.  Choices: text (default)')
+            choices=('text','html'),
+            help='Output format.  Choices: text (default), html')
     parser.add_option('-q', '--quiet', action='count', default=0,
             help='Decrease debugging verbosity.')
     parser.add_option('-v', '--verbose', action='count', default=0,
