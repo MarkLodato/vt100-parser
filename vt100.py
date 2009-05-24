@@ -80,6 +80,11 @@ def format_text(line, eol='\n'):
     return ''.join(x.char for x in line) + eol
 
 
+formatters = {
+        'text' : ('', format_text, ''),
+        }
+
+
 class Character:
     """A single character along with an associated attribute."""
     def __init__(self, char, attr = {}):
@@ -1416,6 +1421,9 @@ class Terminal:
 if __name__ == "__main__":
     usage = "%prog (filename|-)"
     parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--format', default='text',
+            choices=('text',),
+            help='Output format.  Choices: text (default)')
     parser.add_option('-q', '--quiet', action='count', default=0,
             help='Decrease debugging verbosity.')
     parser.add_option('-v', '--verbose', action='count', default=0,
@@ -1437,13 +1445,14 @@ if __name__ == "__main__":
         f = sys.stdin
     else:
         f = open(filename, 'rb')
-    t = Terminal(verbosity=options.verbose)
+    pre, format_line, post = formatters[options.format]
+    t = Terminal(verbosity=options.verbose, format_line=format_line)
     script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
             r'\d\d:\d\d:\d\d \w+ \w+$')
     for line in f:
         if not options.non_script and script_re.match(line):
             continue
         t.parse(line)
-    print(t.to_string(), end='')
+    print(pre, t.to_string(), post, sep='', end='')
     if filename != '-':
         f.close()
