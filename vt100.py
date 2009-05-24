@@ -82,7 +82,7 @@ class Character:
         self.char = char
         self.attr = attr
     def __repr__(self):
-        return str(self.char)
+        return "<'%s'>" % (str(self.char))
     def __str__(self):
         return str(self.char)
 
