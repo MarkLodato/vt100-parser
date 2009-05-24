@@ -274,6 +274,7 @@ class Terminal:
         rows top (inclusive, default 0) and bottom (exclusive, default
         height).  Any data moved off the top of the screen (if top is 0) is
         saved to the history."""
+        # TODO add option to print instead of adding to history
         # TODO scroll region
         if top is None:
             top = 0
