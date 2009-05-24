@@ -76,6 +76,10 @@ from optparse import OptionParser
 __metaclass__ = type
 
 
+def format_text(line, eol='\n'):
+    return ''.join(x.char for x in line) + eol
+
+
 class Character:
     """A single character along with an associated attribute."""
     def __init__(self, char, attr = {}):
@@ -149,7 +153,8 @@ class Terminal:
 
     # ---------- Constructor ----------
 
-    def __init__(self, height=24, width=80, verbosity=False):
+    def __init__(self, height=24, width=80, verbosity=False,
+            format_line = format_text):
         self.verbosity = verbosity
         self.state = 'ground'
         self.prev_state = None
@@ -163,6 +168,7 @@ class Terminal:
         self.previous = '\0'
         self.tabstops = [(i%8)==0 for i in range(width)]
         self.attr = {}
+        self.format_line = format_line
         self.clear()
 
     # ---------- Utilities ----------
@@ -274,28 +280,61 @@ class Terminal:
 
     # ---------- Output ----------
 
-    def to_string(self, history=True, screen=True, remove_blank_end=True):
+    def to_string(self, history=True, screen=True, remove_blank_end=True,
+            format_line=None):
         """Return a string form of the history and the current screen."""
-        # TODO use attributes / formatter
-        input = []
-        if history:
-            input.append(self.history)
-        if screen:
-            input.append(self.screen)
-        if not input:
-            return
-        lines = itertools.chain(*input)
-        def f(line):
-            s = ''.join(x.char if x is not None else '\0'
-                        for x in line)
-            return s.rstrip('\0').replace('\0',' ')
-        s = '\n'.join(map(f, lines))
-        if remove_blank_end:
-            s = s.rstrip('\n')
-        return s + '\n'
 
-    def print_screen(self):
-        print(self.to_string(False, True, False), end='')
+        # Concatenate the history and the screen, and fix each line.
+        lines = []
+        if history:
+            lines.extend(itertools.imap(self.fixup_line, self.history))
+        if screen:
+            lines.extend(itertools.imap(self.fixup_line, self.screen))
+        if not lines:
+            return
+
+        # Remove blank lines from the end of input.
+        if remove_blank_end:
+            lines = self.drop_end(None, list(lines))
+
+        if format_line is None:
+            format_line = self.format_line
+        return ''.join(format_line(line) for line in lines)
+
+    def print_screen(self, format_line=None):
+        """Print the state of the current screen to standard output."""
+        print(self.to_string(False, True, False, format_line), end='')
+
+    def fixup_line(self, line):
+        """Remove empty characters from the end of the line and change Nones
+        to spaces with no attributes."""
+        def convert_to_blank(x):
+            if x is not None:
+                return x
+            else:
+                return Character(' ')
+        def is_None(x):
+            return x is None
+        return map(convert_to_blank, self.drop_end(is_None, line))
+
+    @staticmethod
+    def drop_end(predicate, sequence):
+        """Simliar as itertools.dropwhile, except operating from the end."""
+        i = 0
+        if predicate is None:
+            for x in reversed(sequence):
+                if x:
+                    break
+                i += 1
+        else:
+            for x in reversed(sequence):
+                if not predicate(x):
+                    break
+                i += 1
+        if i == 0:
+            return sequence
+        else:
+            return sequence[:-i]
 
     # ---------- Single-character commands (C0) ----------
 
