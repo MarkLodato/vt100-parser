@@ -78,7 +78,7 @@ __metaclass__ = type
 
 class Character:
     """A single character along with an associated attribute."""
-    def __init__(self, char, attr = None):
+    def __init__(self, char, attr = {}):
         self.char = char
         self.attr = attr
     def __repr__(self):
