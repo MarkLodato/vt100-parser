@@ -781,9 +781,7 @@ class Terminal:
                     gray = (o-232) * 10 + 8
                     set_attr(key, '#%02x%02x%02x' % (gray,gray,gray))
             def clear_all():
-                def f():
-                    self.attr.clear()
-                return f
+                self.attr.clear()
             def set_attr(key, value = True):
                 def f(key=key, value=value):
                     self.attr[key] = value
