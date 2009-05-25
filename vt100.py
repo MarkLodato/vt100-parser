@@ -243,6 +243,7 @@ class Terminal:
         self.row = 0
         self.col = 0
         self.previous = '\0'
+        self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(width)]
         self.attr = {}
         self.format_line = format_line
@@ -334,7 +335,6 @@ class Terminal:
             raise RuntimeError("internal error: unknown state %s" %
                     repr(self.state))
         self.next_state = self.state
-        self.previous = c
         f(c)
         self.transition()
 
@@ -351,6 +351,7 @@ class Terminal:
                 f(self.prev_state)
 
     def parse_ground(self, c):
+        self.previous, self.current = self.current, c
         if ord(c) < 0x20:
             self.execute(c)
         else:
