@@ -1,0 +1,45 @@
+#!/usr/bin/python
+"""
+Print the given file(s) to standard output in raw mode.
+"""
+
+import sys
+import termios
+
+__metaclass__ = type
+
+BUFSIZ = 4096
+OFLAG = 1
+
+class RawMode:
+    def __init__(self, f):
+        self.f = f
+    def __enter__(self):
+        self.saved = termios.tcgetattr(self.f)
+        mode = list(self.saved)
+        mode[OFLAG] &= ~termios.OPOST
+        termios.tcsetattr(self.f, termios.TCSAFLUSH, mode)
+        return self.f
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        termios.tcsetattr(self.f, termios.TCSAFLUSH, self.saved)
+
+def rawcat(files, outfile):
+    if not files:
+        files = ['-']
+
+    with RawMode(outfile):
+        for filename in files:
+            if filename == '-':
+                f = sys.stdout
+            else:
+                f = open(filename, 'rb')
+            while True:
+                buf = f.read(4096)
+                if not buf:
+                    break
+                outfile.write(buf)
+            if filename != '-':
+                f.close()
+
+if __name__ == "__main__":
+    rawcat(sys.argv[1:], sys.stdout)
