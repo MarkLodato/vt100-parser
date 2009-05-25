@@ -514,6 +514,8 @@ class Terminal:
     @escape('D')
     def IND(self, c=None):
         """Index"""
+        if self.col >= self.width:
+            self.col = self.width - 1
         if self.row < self.height - 1:
             self.row += 1
         else:
