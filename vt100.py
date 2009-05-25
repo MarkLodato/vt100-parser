@@ -260,6 +260,12 @@ class Terminal:
         """Reset internal buffers for switching between states."""
         self.collected = ''
 
+    def clip_column(self):
+        """If the cursor is past the end of the line, move it to the last
+        position in the line."""
+        if self.col >= self.width:
+            self.col = self.width - 1
+
     def output(self, c):
         """Print the character at the current position and increment the
         cursor to the next position.  If the current position is past the end
@@ -437,6 +443,7 @@ class Terminal:
     @command('\x08')        # ^H
     def BS(self, c=None):
         """Backspace"""
+        self.clip_column()
         self.col -= 1  if self.col > 0 else 0
 
     @command('\x09')        # ^I
@@ -514,8 +521,7 @@ class Terminal:
     @escape('D')
     def IND(self, c=None):
         """Index"""
-        if self.col >= self.width:
-            self.col = self.width - 1
+        self.clip_column()
         if self.row < self.height - 1:
             self.row += 1
         else:
