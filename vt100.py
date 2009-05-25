@@ -267,7 +267,7 @@ class Terminal:
             self.NEL()
         c = Character(c, self.attr.copy())
         self.screen[self.pos] = c
-        self.CUF()
+        self.col += 1
 
     def scroll(self, n, top = None, bottom = None):
         """Scroll the scrolling region n lines upward (data moves up) between
