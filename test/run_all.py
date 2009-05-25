@@ -42,6 +42,8 @@ def test_all():
     tests = glob.glob('t????-*.in')
     tests.sort()
     for filename in tests:
+        if filename.endswith('.in'):
+            filename = filename[:-3]
         r = test(filename)
         results.append((filename, r))
         msg = ' \x1b[32mOK\x1b[0m ' if r else '\x1b[31mFAIL\x1b[0m'
