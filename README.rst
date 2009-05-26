@@ -76,10 +76,12 @@ NOTES
 
 For testing how a terminal implements a feature, the included *rawcat* program
 may be helpful.  It acts like cat(1), except that it outputs the file
-literally; in particular, it does not perform LF to CRLF translation.
-Alternatively, one may replace the LF (0x0a) character with VT (0x0b) or FF
-(0x0c), which are treated identically but are not subject to newline
-translation.
+literally; it does not perform LF to CRLF translation.  Alternatively, one may
+replace the LF (0x0a) character with VT (0x0b) or FF (0x0c), which are treated
+identically but are not subject to newline translation.
+
+A neat feature of *rawcat* is the ``-w`` option, which causes it to pause
+after each output byte so you can observe xterm draw the screen.
 
 
 AUTHOR

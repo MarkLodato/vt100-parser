@@ -1,14 +1,20 @@
 #!/usr/bin/python
-"""
-Print the given file(s) to standard output in raw mode.
+"""\
+USAGE: %prog [-b BYTES] [-w MSEC] FILE...
+
+Print the given file(s) to standard output without converting LF to CRLF.
+
+To pause after each byte output, run with ``-w 100``.
 """
 
+import re
 import sys
 import termios
+import time
+from optparse import OptionParser
 
 __metaclass__ = type
 
-BUFSIZ = 4096
 OFLAG = 1
 
 class RawMode:
@@ -23,10 +29,15 @@ class RawMode:
     def __exit__(self, exc_type, exc_val, exc_tb):
         termios.tcsetattr(self.f, termios.TCSAFLUSH, self.saved)
 
-def rawcat(files, outfile):
-    if not files:
-        files = ['-']
-
+def rawcat(files, outfile, bufsiz=None, wait=None):
+    if wait is None:
+        if not bufsiz:
+            bufsiz = 4096
+        wait = 0.0
+    else:
+        if not bufsiz:
+            bufsiz = 1
+        wait /= 1000.0
     with RawMode(outfile):
         for filename in files:
             if filename == '-':
@@ -34,12 +45,27 @@ def rawcat(files, outfile):
             else:
                 f = open(filename, 'rb')
             while True:
-                buf = f.read(4096)
+                buf = f.read(bufsiz)
                 if not buf:
                     break
                 outfile.write(buf)
+                if wait:
+                    outfile.flush()
+                    time.sleep(wait)
             if filename != '-':
                 f.close()
 
 if __name__ == "__main__":
-    rawcat(sys.argv[1:], sys.stdout)
+    doc = globals()['__doc__']
+    usage, desc = re.match(r'USAGE:\s*(.*?)\n{2,}(.*)', doc,
+                           re.DOTALL | re.IGNORECASE).groups()
+    parser = OptionParser(usage=usage, description=desc)
+    parser.add_option('-b', '--buffer-size', type='int', metavar='BYTES',
+            help='Read this many bytes at at time (default: 1 if -w, else 4096)')
+    parser.add_option('-w', '--wait', type='float', metavar='MSEC',
+            help='Milliseconds to wait between buffers (default: no wait)')
+    options, args = parser.parse_args()
+    if not args:
+        parser.print_usage()
+        sys.exit(1)
+    rawcat(args, sys.stdout, bufsiz=options.buffer_size, wait=options.wait)
