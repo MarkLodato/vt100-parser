@@ -1356,12 +1356,12 @@ class Terminal:
 
     @escape('K')
     def PLD(self, command=None, param=None):
-        """Partial Line forward (Down)"""
+        """Partial Line Forward (Down)"""
         return NotImplemented
 
     @escape('L')
     def PLU(self, command=None, param=None):
-        """Partial Line backward (Up)"""
+        """Partial Line Backward (Up)"""
         return NotImplemented
 
     @escape('Q')
@@ -1381,7 +1381,7 @@ class Terminal:
 
     @escape('T')
     def CCH(self, command=None, param=None):
-        """Cancel CHaracter"""
+        """Cancel Character"""
         return NotImplemented
 
     @escape('U')
@@ -1391,12 +1391,12 @@ class Terminal:
 
     @escape('V')
     def SPA(self, c=None):
-        """Start of guarded (Protected) Area"""
+        """Start of Guarded (Protected) Area"""
         return NotImplemented
 
     @escape('W')
     def EPA(self, c=None):
-        """End of guarded (Protected) Area"""
+        """End of Guarded (Protected) Area"""
         return NotImplemented
 
     # no @escape('Y')
