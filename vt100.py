@@ -541,6 +541,7 @@ class Terminal:
     @escape('M')
     def RI(self, c=None):
         """Reverse Index (reverse line feed)"""
+        self.clip_column()
         if self.row > 0:
             self.row -= 1
         else:
