@@ -1,0 +1,50 @@
+Testing
+=======
+
+* tabs
+* many more...
+
+* test HTML output (new framework needed?)
+
+
+Commands To Implement
+=====================
+
+* ICH
+* Modes: SM, RM
+* Reset: RIS, DECSTR
+* Cursor save/restore: DECSC, DECRC, CSI s, CSI u
+* Scroll region: DECSTBM, modify scroll()
+* DEC Rectangular Area: CECCARA, DECRARA
+* OSC command to configure the 256 xterm colors.
+* Alternate fonts / character sets?
+
+
+Options
+=======
+
+* 8-bit mode?
+* 88- vs 256-color
+* 8-color vs 16-color
+* Non xterm?
+
+
+Output
+======
+
+* 'inverse' attribute for HTML
+
+* Xterm keeps track of long lines so that you can select wrapped lines as a
+  single line.  This is not possible for text output, but it might be in HTML.
+  It is possible to set the ``pre``\ 's style to wrap using the following::
+
+    pre {
+    white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
+    white-space: -pre-wrap; /* Opera 4 - 6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) */
+    word-wrap: break-word; /* IE 5.5+ */
+    }
+
+  However, I'm not sure how to specify that there should be exactly 80 (or
+  whatever) columns.  Also, this would require some tracking of wrapping.

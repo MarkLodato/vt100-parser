@@ -518,6 +518,16 @@ class Terminal:
             self.debug(0, 'escape not implemented: %s' % f.__name__)
 
 
+    @escape('7')
+    def DECSC(self, c=None):
+        """Save Cursor"""
+        return NotImplemented
+
+    @escape('8')
+    def DECRC(self, c=None):
+        """Restore Cursor"""
+        return NotImplemented
+
     @escape('D')
     def IND(self, c=None):
         """Index"""
@@ -581,6 +591,11 @@ class Terminal:
     def APC(self, c=None):
         """Application Program Command"""
         self.next_state = 'apc'
+
+    @escape('c')
+    def RIS(self, command=None, param=None):
+        """Reset to Initial State"""
+        return NotImplemented
 
 
     # ---------- Control Sequences ----------
@@ -1009,8 +1024,6 @@ class Terminal:
         """Restore cursor"""
         return NotImplemented
 
-    # TODO more from ctlseqs.txt
-
 
 
     # ---------- Control Strings ----------
@@ -1093,16 +1106,6 @@ class Terminal:
         return NotImplemented
 
     # --------------------
-
-    @escape('7')
-    def DECSC(self, c=None):
-        """Save Cursor"""
-        return NotImplemented
-
-    @escape('8')
-    def DECRC(self, c=None):
-        """Restore Cursor"""
-        return NotImplemented
 
     @escape('=')
     def DECPAM(self, command=None, param=None):
@@ -1415,12 +1418,6 @@ class Terminal:
     def EMI(self, command=None, param=None):
         """Enable Manual Input"""
         return NotImplemented
-
-    @escape('c')
-    def RIS(self, command=None, param=None):
-        """Reset to Initial State"""
-        return NotImplemented
-        # TODO
 
     @escape('d')
     def CMD(self, command=None, param=None):
