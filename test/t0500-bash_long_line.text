@@ -1,0 +1,4 @@
+dircolors: /etc/DIR_COLORS: No such file or directory
+mark@mark-desktop:~/vt100-to-html$ cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
+VWXYZ1234567890abcdefghijklmnopqrstuv
+mark@mark-desktop:~/vt100-to-html$ exit

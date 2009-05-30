@@ -1,0 +1,6 @@
+$ ls /                                                  ~/vt100-to-html/scripts
+bin    dev     initrd.img      lib64       opt   selinux  usr
+boot   etc     initrd.img.old  lost+found  proc  srv      var
+boot2  home    lib             media       root  sys      vmlinuz
+cdrom  initrd  lib32           mnt         sbin  tmp      vmlinuz.old
+$                                                       ~/vt100-to-html/scripts
