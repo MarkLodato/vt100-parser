@@ -8,7 +8,9 @@ import sys, os
 import glob
 from subprocess import Popen, PIPE
 
-PROG = ['../vt100.py']
+PROG = '../vt100.py'
+IN_EXT = '.in'
+FORMATS = ['text', 'html']
 
 def slurp(filename):
     with open(filename, 'rb') as f:
@@ -30,24 +32,26 @@ def compare_output(command, out_filename):
         # TODO print difference
         return False
 
-def test(test_name):
-    if test_name.endswith('.in'):
-        test_name = test_name[:-3]
-    command = PROG + [test_name + '.in']
-    out_filename = test_name + '.text'
-    return compare_output(command, out_filename)
+def test(test_name, fmt):
+    out_filename = '%s.%s' % (test_name, fmt)
+    if os.path.exists(out_filename):
+        command = [PROG, test_name + IN_EXT, '-f', fmt]
+        return compare_output(command, out_filename)
 
 def test_all():
     results = []
-    tests = glob.glob('t????-*.in')
+    tests = glob.glob('t????-*' + IN_EXT)
     tests.sort()
     for filename in tests:
-        if filename.endswith('.in'):
+        if filename.endswith(IN_EXT):
             filename = filename[:-3]
-        r = test(filename)
-        results.append((filename, r))
-        msg = ' \x1b[32mOK\x1b[0m ' if r else '\x1b[31mFAIL\x1b[0m'
-        print '%-60s [%s]' % (filename, msg)
+        for fmt in FORMATS:
+            testname = '%s.%s' % (filename, fmt)
+            r = test(filename, fmt)
+            if r is None: continue
+            results.append((testname, r))
+            msg = ' \x1b[32mOK\x1b[0m ' if r else '\x1b[31mFAIL\x1b[0m'
+            print '%-60s [%s]' % (testname, msg)
 
     return results
 
