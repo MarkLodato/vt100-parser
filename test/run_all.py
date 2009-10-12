@@ -52,10 +52,8 @@ def test(test_name, fmt):
         command = [PROG, test_name + IN_EXT, '-f', fmt]
         return compare_output(command, out_filename)
 
-def test_all():
+def test_all(tests):
     results = []
-    tests = glob.glob('t????-*' + IN_EXT)
-    tests.sort()
     for filename in tests:
         if filename.endswith(IN_EXT):
             filename = filename[:-3]
@@ -69,8 +67,17 @@ def test_all():
 
     return results
 
+def main(patterns = None):
+    if not patterns:
+        tests = glob.glob('t????-*' + IN_EXT)
+        tests.sort()
+    else:
+        tests = patterns
+    r = test_all(tests)
+    return int(not all(x[1] for x in r))
 
 if __name__ == "__main__":
-    r = test_all()
-    if not all(x[1] for x in r):
-        sys.exit(1)
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        sys.exit(2)
