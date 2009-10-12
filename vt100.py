@@ -737,6 +737,7 @@ class Terminal:
     def CUB(self, command=None, param=None):
         """Cursor Backward"""
         n = param_list(param, 1)[0]
+        self.col = clip(self.col, self.width)
         self.col = clip(self.col-n, self.width)
 
     @control('E')
