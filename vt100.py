@@ -706,7 +706,14 @@ class Terminal:
     @control('@')
     def ICH(self, command=None, param=None):
         """Insert (blank) Characters"""
-        return NotImplemented
+        n = param_list(param, 1)[0]
+        self.row = clip(self.row, self.height)
+        self.col = clip(self.col, self.width)
+        r = self.row
+        c = self.col
+        right = self.screen[r,c+n:]
+        right[:] = self.screen[r,c:c+len(right)]
+        self.screen[r,c:c+n] = Character(' ')
 
     @control('A')
     def CUU(self, command=None, param=None):

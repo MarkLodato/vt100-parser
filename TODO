@@ -10,7 +10,6 @@ Testing
 Commands To Implement
 =====================
 
-* ICH
 * Modes: SM, RM
 * Reset: RIS, DECSTR
 * Cursor save/restore: DECSC, DECRC, CSI s, CSI u
