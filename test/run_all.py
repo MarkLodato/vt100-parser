@@ -6,6 +6,7 @@ expected output.
 
 import sys, os
 import glob
+import difflib
 from subprocess import Popen, PIPE
 
 PROG = '../vt100.py'
@@ -29,7 +30,20 @@ def compare_output(command, out_filename):
     if output == expected:
         return True
     else:
-        # TODO print difference
+        lines = difflib.unified_diff(expected.split('\n'), output.split('\n'),
+                fromfile=out_filename, tofile=' '.join(command), lineterm='')
+        for line in lines:
+            if line[0] == '+':
+                print('\x1b[32m' + line[1:] + '\x1b[0m')
+            elif line[0] == '-':
+                print('\x1b[31m' + line[1:] + '\x1b[0m')
+            elif line[0] == '@':
+                print('\x1b[36m' + line + '\x1b[0m')
+            elif line[0] == ' ':
+                print(line[1:])
+            else:
+                print(line)
+        print '\n'.join(lines)
         return False
 
 def test(test_name, fmt):
