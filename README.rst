@@ -83,6 +83,14 @@ identically but are not subject to newline translation.
 A neat feature of *rawcat* is the ``-w`` option, which causes it to pause
 after each output byte so you can observe xterm draw the screen.
 
+xterm(1) ignores the following commands, but we interpret them as the command
+in parentheses:
+
+- HPR (CUF)
+- HPB (CUB)
+- VPR (CUU)
+- VPB (CUD)
+
 
 AUTHOR
 ======
