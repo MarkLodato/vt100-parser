@@ -719,12 +719,14 @@ class Terminal:
     def CUU(self, command=None, param=None):
         """Cursor Up"""
         n = param_list(param, 1)[0]
+        self.col = clip(self.col, self.width)
         self.row = clip(self.row-n, self.height)
 
     @control('B')
     def CUD(self, command=None, param=None):
         """Cursor Down"""
         n = param_list(param, 1)[0]
+        self.col = clip(self.col, self.width)
         self.row = clip(self.row+n, self.height)
 
     @control('C')
