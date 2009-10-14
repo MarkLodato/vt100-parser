@@ -817,15 +817,16 @@ class Terminal:
         """Insert Line(s)"""
         # TODO scroll region?
         n = param_list(param, 1)[0]
-        self.scroll(n, bottom=self.row)
-        self.CUU(param=str(n))
+        self.clip_column()
+        self.scroll(-n, top=self.row, save=False)
 
     @control('M')
     def DL(self, command=None, param=None):
         """Delete Line(s)"""
         # TODO scroll region?
         n = param_list(param, 1)[0]
-        self.scroll(n, top=self.row)
+        self.clip_column()
+        self.scroll(n, top=self.row, save=False)
 
     @control('P')
     def DCH(self, command=None, param=None):
