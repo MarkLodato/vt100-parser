@@ -707,8 +707,7 @@ class Terminal:
     def ICH(self, command=None, param=None):
         """Insert (blank) Characters"""
         n = param_list(param, 1)[0]
-        self.row = clip(self.row, self.height)
-        self.col = clip(self.col, self.width)
+        self.clip_column()
         r = self.row
         c = self.col
         right = self.screen[r,c+n:]
@@ -719,14 +718,14 @@ class Terminal:
     def CUU(self, command=None, param=None):
         """Cursor Up"""
         n = param_list(param, 1)[0]
-        self.col = clip(self.col, self.width)
+        self.clip_column()
         self.row = clip(self.row-n, self.height)
 
     @control('B')
     def CUD(self, command=None, param=None):
         """Cursor Down"""
         n = param_list(param, 1)[0]
-        self.col = clip(self.col, self.width)
+        self.clip_column()
         self.row = clip(self.row+n, self.height)
 
     @control('C')
@@ -739,7 +738,7 @@ class Terminal:
     def CUB(self, command=None, param=None):
         """Cursor Backward"""
         n = param_list(param, 1)[0]
-        self.col = clip(self.col, self.width)
+        self.clip_column()
         self.col = clip(self.col-n, self.width)
 
     @control('E')
