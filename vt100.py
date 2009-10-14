@@ -333,11 +333,11 @@ class Terminal:
         self.screen[self.pos] = c
         self.col += 1
 
-    def scroll(self, n, top = None, bottom = None):
+    def scroll(self, n, top = None, bottom = None, save = None):
         """Scroll the scrolling region n lines upward (data moves up) between
         rows top (inclusive, default 0) and bottom (exclusive, default
-        height).  Any data moved off the top of the screen (if top is 0) is
-        saved to the history."""
+        height).  Any data moved off the top of the screen (if top is 0/None
+        and save is None, or if save is True) is saved to the history."""
         # TODO add option to print instead of adding to history
         # TODO scroll region
         if top is None:
@@ -345,21 +345,22 @@ class Terminal:
         if bottom is None:
             bottom = self.height
         s = self.screen
-        height = bottom-top
+        span = bottom-top
         if n > 0:
             # TODO transform history?
-            if top == 0:
-                self.history.extend( s[:n].copy() )
-            if n > height:
-                extra = n - self.height
-                self.history.extend( [[None]*self.width]*extra )
-                n = self.height
+            if (save is None and top == 0) or save:
+                self.history.extend( s[top:top+n].copy() )
+                if n > span:
+                    extra = n - span
+                    self.history.extend( [[None]*self.width]*extra )
+            if n > span:
+                n = span
             s[top:bottom-n] = s[top+n:bottom]
             s[bottom-n:bottom] = None
         elif n < 0:
             n = -n
-            if n > self.height:
-                n = self.height
+            if n > span:
+                n = span
             s[top+n:bottom] = s[top:bottom-n]
             s[top:top+n] = None
 
