@@ -9,7 +9,7 @@ vt100.py - Parse a typescript and output text.
 SYNOPSIS
 ========
 
-``vt100.py [-q|-v] [-f FORMAT] [--non-script] typescript``
+``vt100.py [-q|-v] [-f FORMAT] [--non-script] (filename|-)``
 
 
 DESCRIPTION
@@ -51,12 +51,12 @@ cause the terminal to respond, or that xterm does not itself implement.
 OPTIONS
 =======
 
--f FORMAT, --format=FORMAT  Specify output format (see "Output Formats")
---non-script                Do not ignore "Script (started|done) on" lines
--q, --quiet                 Decrease debugging verbosity.
--v, --verbose               Increase debugging verbosity.
--h, --help                  Print help message.
---man                       Print manual page.
+-h, --help                  print help message and exit
+--man                       print manual page and exit
+-f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
+--non-script                do not ignore "Script (started|done) on" lines
+-q, --quiet                 decrease debugging verbosity
+-v, --verbose               increase debugging verbosity
 
 
 REQUIREMENTS
@@ -1565,19 +1565,19 @@ class Terminal:
 
 
 if __name__ == "__main__":
-    usage = "%prog (filename|-)"
+    usage = "%prog [-q|-v] [-f FORMAT] [--non-script] (filename|-)"
     parser = OptionParser(usage=usage)
+    parser.add_option('--man', action='store_true', default=False,
+            help='print the manual page and exit.')
     parser.add_option('-f', '--format', default='text',
             choices=('text','html'),
-            help='Output format.  Choices: text (default), html')
-    parser.add_option('-q', '--quiet', action='count', default=0,
-            help='Decrease debugging verbosity.')
-    parser.add_option('-v', '--verbose', action='count', default=0,
-            help='Increase debugging verbosity.')
+            help='output format.  Choices: text (default), html')
     parser.add_option('--non-script', action='store_true', default=False,
-            help='Do not ignore "Script (started|done) on <date>" lines')
-    parser.add_option('--man', action='store_true', default=False,
-            help='Print the manual page and quit.')
+            help='do not ignore "Script (started|done) on <date>" lines')
+    parser.add_option('-q', '--quiet', action='count', default=0,
+            help='decrease debugging verbosity')
+    parser.add_option('-v', '--verbose', action='count', default=0,
+            help='increase debugging verbosity')
     options, args = parser.parse_args()
     if options.man:
         print(globals()['__doc__'])

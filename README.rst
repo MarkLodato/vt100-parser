@@ -8,7 +8,7 @@ vt100.py - Parse a typescript and output text.
 SYNOPSIS
 ========
 
-``vt100.py [-q|-v] [-f FORMAT] [--non-script] typescript``
+``vt100.py [-q|-v] [-f FORMAT] [--non-script] (filename|-)``
 
 
 DESCRIPTION
@@ -50,12 +50,12 @@ cause the terminal to respond, or that xterm does not itself implement.
 OPTIONS
 =======
 
--f FORMAT, --format=FORMAT  Specify output format (see "Output Formats")
---non-script                Do not ignore "Script (started|done) on" lines
--q, --quiet                 Decrease debugging verbosity.
--v, --verbose               Increase debugging verbosity.
--h, --help                  Print help message.
---man                       Print manual page.
+-h, --help                  print help message and exit
+--man                       print manual page and exit
+-f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
+--non-script                do not ignore "Script (started|done) on" lines
+-q, --quiet                 decrease debugging verbosity
+-v, --verbose               increase debugging verbosity
 
 
 REQUIREMENTS
@@ -82,14 +82,6 @@ identically but are not subject to newline translation.
 
 A neat feature of *rawcat* is the ``-w`` option, which causes it to pause
 after each output byte so you can observe xterm draw the screen.
-
-xterm(1) ignores the following commands, but we interpret them as the command
-in parentheses:
-
-- HPR (CUF)
-- HPB (CUB)
-- VPR (CUU)
-- VPB (CUD)
 
 
 AUTHOR
