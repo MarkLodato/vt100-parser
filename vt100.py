@@ -805,6 +805,7 @@ class Terminal:
         """
         # TODO param =~ ^\?   selective erase
         n = param_list(param, 0)[0]
+        self.clip_column()
         if n == 0:
             self.screen[self.row, self.col:] = None
         elif n == 1:
