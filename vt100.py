@@ -793,7 +793,12 @@ class Terminal:
             self.screen[self.row, :self.col+1] = None
         elif n == 2:
             self.screen[:] = None
-        # no plans to implement 3
+        elif n == 3:
+            # Note: xterm's interpetation of this is a little funky.  It does
+            # not erase the entire history, but saves a number of lines
+            # dependent, in an odd way, on the number of rows in the window.
+            # I see no point in emulating this behavior.
+            self.history[:] = []
 
     @control('K')
     def EL(self, command=None, param=None):
