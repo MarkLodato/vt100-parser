@@ -101,8 +101,10 @@ DEC-compatible parser page.
 # Requires Python 2.6
 from __future__ import print_function
 
+__author__ = "Mark Lodato"
+
 __license__ = """
-Copyright (c) 2009 Mark Lodato
+Copyright (c) 2010 Mark Lodato
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
