@@ -1279,6 +1279,11 @@ class Terminal:
         """Set Conformance Level"""
         return NotImplemented
 
+    @control(' q')
+    def DECSCUSR(self, command=None, param=None):
+        """Set cursor style"""
+        return NotImplemented
+
     @control('"q')
     def DECSCA(self, command=None, param=None):
         """Set Character protection Attribute"""
@@ -1287,6 +1292,16 @@ class Terminal:
     @control('t')
     def window_manipulation(self, command=None, param=None):
         """Window manipulation"""
+        return NotImplemented
+
+    @control(' t')
+    def DECSWBV(self, command=None, param=None):
+        """Set Warning-Bell Volume"""
+        return NotImplemented
+
+    @control(' u')
+    def DECSMBV(self, command=None, param=None):
+        """Set Margin-Bell Volume"""
         return NotImplemented
 
     # ================================================================
