@@ -53,6 +53,7 @@ OPTIONS
 
 -h, --help                  print help message and exit
 --man                       print manual page and exit
+--version                   print version number and exit
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
 --non-script                do not ignore "Script (started|done) on" lines
 -q, --quiet                 decrease debugging verbosity
@@ -101,6 +102,7 @@ DEC-compatible parser page.
 # Requires Python 2.6
 from __future__ import print_function
 
+__version__ = "0.2-beta"
 __author__ = "Mark Lodato"
 
 __license__ = """
@@ -1574,7 +1576,8 @@ class Terminal:
 
 if __name__ == "__main__":
     usage = "%prog [-q|-v] [-f FORMAT] [--non-script] (filename|-)"
-    parser = OptionParser(usage=usage)
+    version = "%%prog %s" % __version__
+    parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
             help='print the manual page and exit.')
     parser.add_option('-f', '--format', default='text',

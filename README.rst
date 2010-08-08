@@ -52,6 +52,7 @@ OPTIONS
 
 -h, --help                  print help message and exit
 --man                       print manual page and exit
+--version                   print version number and exit
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
 --non-script                do not ignore "Script (started|done) on" lines
 -q, --quiet                 decrease debugging verbosity
