@@ -294,12 +294,18 @@ class Terminal:
     def __init__(self, height=24, width=80, verbosity=False,
             format_line = format_text):
         self.verbosity = verbosity
-        self.state = 'ground'
-        self.prev_state = None
-        self.next_state = None
         self.history = []
         self.width = width
         self.height = height
+        self.format_line = format_line
+
+    # ---------- Utilities ----------
+
+    def reset(self):
+        """Reset to initial state."""
+        self.state = 'ground'
+        self.prev_state = None
+        self.next_state = None
         self.screen = np.array([[None] * width] * height, dtype=object)
         self.row = 0
         self.col = 0
@@ -307,10 +313,7 @@ class Terminal:
         self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(width)]
         self.attr = {}
-        self.format_line = format_line
         self.clear()
-
-    # ---------- Utilities ----------
 
     @property
     def pos(self):
@@ -657,7 +660,7 @@ class Terminal:
     @escape('c')
     def RIS(self, command=None, param=None):
         """Reset to Initial State"""
-        return NotImplemented
+        self.reset()
 
 
     # ---------- Control Sequences ----------
