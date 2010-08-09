@@ -1,0 +1,13 @@
+Version 0.2 - 2010-08-09
+- Add HTML output format
+- Implement the following sequences:
+    * SGR (Set Graphics Attributes: bold, color, etc.)
+    * ICH (Insert Character)
+    * ED param 3 (Erase Saved Lines)
+    * RIS (Reset)
+- Add `rawcat' program
+- Add testing framework and many tests
+- Many bug fixes, including proper line wrapping / edge cases.
+
+Version 0.1 - 2009-05-21
+- Initial Release
