@@ -268,7 +268,7 @@ def clip(n, start, stop=None):
 
 def new_sequence_decorator(dictionary):
     def decorator_generator(key):
-        assert isinstance(key, str)
+        assert isinstance(key, (basestring, int))
         def decorator(f, key=key):
             dictionary[key] = f.__name__
             return f
@@ -284,10 +284,14 @@ class Terminal:
     commands = {}
     escape_sequences = {}
     control_sequences = {}
+    ansi_modes = {}
+    dec_modes = {}
 
     command = new_sequence_decorator(commands)
     escape  = new_sequence_decorator(escape_sequences)
     control = new_sequence_decorator(control_sequences)
+    ansi_mode = new_sequence_decorator(ansi_modes)
+    dec_mode = new_sequence_decorator(dec_modes)
 
     # ---------- Constructor ----------
 
@@ -929,7 +933,7 @@ class Terminal:
     @control('h')
     def SM(self, command=None, param=None):
         """Set Mode"""
-        return NotImplemented
+        return self.dispatch_modes(param, True)
 
     @control('j')
     def HPB(self, command=None, param=None):
@@ -944,7 +948,7 @@ class Terminal:
     @control('l')
     def RM(self, command=None, param=None):
         """Reset Mode"""
-        return NotImplemented
+        return self.dispatch_modes(param, False)
 
     @control('m')
     def SGR(self, command=None, param=None):
@@ -1167,6 +1171,91 @@ class Terminal:
             repr(args)))
 
 
+    # ---------- Modes ----------
+
+    def dispatch_modes(self, param, value):
+        if not param:
+            return
+        if param[0] == '?':
+            modes = self.dec_modes
+            param = param[1:]
+        elif param[0] in '0123456789:;':
+            modes = self.ansi_modes
+        else:
+            self.debug(0, 'ignoring unknown mode string: %s', param)
+            return
+        for n in param_list(param, 0):
+            name = modes[n]
+            f = None
+            if name is not None:
+                f = getattr(self, name, None)
+            if f is None:
+                self.debug(0, 'unrecognized mode: %s' % mode)
+            else:
+                r = f(value)
+                if r is NotImplemented:
+                    self.debug(0, 'mode not implemented: %s' % f.__name__)
+
+    @ansi_mode(4)
+    def IRM(self, value):
+        """Insertion Replacement Mode"""
+        return NotImplemented
+
+    @ansi_mode(20)
+    def LNM(self, value):
+        """Line Feed/New Line Mode"""
+        return NotImplemented
+
+    @dec_mode(3)
+    def DECCOLM(self, value):
+        """Column Mode"""
+        return NotImplemented
+
+    @dec_mode(5)
+    def DECSCNM(self, value):
+        """Screen Mode"""
+        return NotImplemented
+
+    @dec_mode(6)
+    def DECOM(self, value):
+        """Origin Mode"""
+        return NotImplemented
+
+    @dec_mode(7)
+    def DECAWM(self, value):
+        """Auto Wrap Mode"""
+        return NotImplemented
+
+    @dec_mode(45)
+    def reverse_wraparound_mode(self, value):
+        """Reverse-wraparound mode"""
+        return NotImplemented
+
+    @dec_mode(47)
+    @dec_mode(1047)
+    def alternate_screen_buffer_mode(self, value):
+        """Alternate Screen Buffer"""
+        return NotImplemented
+
+    @dec_mode(1048)
+    def save_cursor_mode(self, value):
+        """Save cursor"""
+        if value:
+            return self.DECSC()
+        else:
+            return self.DECRC()
+
+    @dec_mode(1049)
+    def alternate_screen_buffer_clearing_mode(self, value):
+        """Save cursor, switch to alternate screen buffer, and clear the
+        screen."""
+        if value:
+            self.DECSC()
+            self.ED(self, param='2')
+            self.alternate_screen_buffer_mode(True)
+        else:
+            self.alternate_screen_buffer_mode(False)
+            self.DECRC()
 
 
     # ================================================================
@@ -1308,6 +1397,21 @@ class Terminal:
     def DECSMBV(self, command=None, param=None):
         """Set Margin-Bell Volume"""
         return NotImplemented
+
+    # --------------------
+
+    @ansi_mode(2)
+    def KAM(self, value):
+        """Keyboard Action Mode"""
+        return NotImplemented
+
+    @ansi_mode(12)
+    def SRM(self, value):
+        """Send/Receive Mode"""
+        return NotImplemented
+
+    # Tons of DEC Private Modes...
+
 
     # ================================================================
     #                  Things not implemented by xterm.
@@ -1591,6 +1695,97 @@ class Terminal:
         """Define Area Qualification"""
         return NotImplemented
 
+    # --------------------
+
+    @ansi_mode(1)
+    def GATM(self, value):
+        """Guarded Area Transfer Mode"""
+        return NotImplemented
+
+    @ansi_mode(3)
+    def CRM(self, value):
+        """Control Representation Mode"""
+        return NotImplemented
+
+    @ansi_mode(5)
+    def SRTM(self, value):
+        """Status Report Transfer Mode"""
+        return NotImplemented
+
+    @ansi_mode(6)
+    def ERM(self, value):
+        """Erasure Mode"""
+        return NotImplemented
+
+    @ansi_mode(7)
+    def VEM(self, value):
+        """Line Editing Mode"""
+        return NotImplemented
+
+    @ansi_mode(8)
+    def BDSM(self, value):
+        """Bi-Directional Support Mode"""
+        return NotImplemented
+
+    @ansi_mode(9)
+    def DCSM(self, value):
+        """Device Component Select Mode"""
+        return NotImplemented
+
+    @ansi_mode(10)
+    def HEM(self, value):
+        """Character Editing Mode"""
+        return NotImplemented
+
+    @ansi_mode(11)
+    def PUM(self, value):
+        """Positioning Unit Mode"""
+        return NotImplemented
+
+    @ansi_mode(13)
+    def FEAM(self, value):
+        """Format Effector Action Mode"""
+        return NotImplemented
+
+    @ansi_mode(14)
+    def FETM(self, value):
+        """Format Effector Transfer Mode"""
+        return NotImplemented
+
+    @ansi_mode(15)
+    def MATM(self, value):
+        """Multiple Area Transfer Mode"""
+        return NotImplemented
+
+    @ansi_mode(16)
+    def TTM(self, value):
+        """Transfer Termination Mode"""
+        return NotImplemented
+
+    @ansi_mode(17)
+    def SATM(self, value):
+        """Selected Area Transfer Mode"""
+        return NotImplemented
+
+    @ansi_mode(18)
+    def TSM(self, value):
+        """Tabulation Stop Mode"""
+        return NotImplemented
+
+    @ansi_mode(19)
+    def EBM(self, value):
+        """Editing Boundary Mode"""
+        return NotImplemented
+
+    @ansi_mode(21)
+    def GRCM(self, value):
+        """Graphic Rendition Combination"""
+        return NotImplemented
+
+    @ansi_mode(22)
+    def ZDM(self, value):
+        """Zero Default Mode"""
+        return NotImplemented
 
 
 
