@@ -298,6 +298,8 @@ class Terminal:
         self.width = width
         self.height = height
         self.format_line = format_line
+        self.screen = np.array([[None] * width] * height, dtype=object)
+        self.reset()
 
     # ---------- Utilities ----------
 
@@ -306,12 +308,12 @@ class Terminal:
         self.state = 'ground'
         self.prev_state = None
         self.next_state = None
-        self.screen = np.array([[None] * width] * height, dtype=object)
+        self.screen[:] = None
         self.row = 0
         self.col = 0
         self.previous = '\0'
         self.current = '\0'
-        self.tabstops = [(i%8)==0 for i in range(width)]
+        self.tabstops = [(i%8)==0 for i in range(self.width)]
         self.attr = {}
         self.clear()
 
