@@ -276,6 +276,10 @@ def new_sequence_decorator(dictionary):
     return decorator_generator
 
 
+class NoNeedToImplement (Exception):
+    """A function for which there is no need to implement."""
+    pass
+
 
 class Terminal:
 
@@ -508,6 +512,13 @@ class Terminal:
         r = f(c)
         if r is NotImplemented:
             self.debug(0, 'command not implemented: %s' % f.__name__)
+        elif r is NoNeedToImplement:
+            self.debug(1, 'ignoring command: %s' % f.__name__)
+
+    @command('\x00')        # ^@
+    def NUL(self, c=None):
+        """NULl"""
+        pass
 
     @command('\x07')        # ^G
     def BEL(self, c=None):
@@ -590,6 +601,8 @@ class Terminal:
         r = f(command)
         if r is NotImplemented:
             self.debug(0, 'escape not implemented: %s' % f.__name__)
+        elif r is NoNeedToImplement:
+            self.debug(1, 'ignoring escape: %s' % f.__name__)
 
 
     @escape('7')
@@ -706,6 +719,9 @@ class Terminal:
             r = f(command, param)
             if r is NotImplemented:
                 self.debug(0, 'control sequence not implemented: %s'
+                              % f.__name__)
+            elif r is NoNeedToImplement:
+                self.debug(1, 'ignoring control sequence: %s'
                               % f.__name__)
         except InvalidParameterListError:
             self.invalid_control_sequence()
@@ -1202,6 +1218,8 @@ class Terminal:
                 r = f(value)
                 if r is NotImplemented:
                     self.debug(0, 'mode not implemented: %s' % f.__name__)
+                if r is NoNeedToImplement:
+                    self.debug(1, 'ignoring mode: %s' % f.__name__)
 
     @ansi_mode(4)
     def IRM(self, value):
@@ -1272,7 +1290,7 @@ class Terminal:
     @command('\x05')       # ^E
     def ENQ(self, c=None):
         """Enquiry"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @command('\x0e')       # ^N
     def SO(self, c=None):
@@ -1289,12 +1307,12 @@ class Terminal:
     @escape('=')
     def DECPAM(self, command=None, param=None):
         """Application Keypad"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @escape('>')
     def DECPNM(self, command=None, param=None):
         """Normal Keypad"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @escape('N')
     def SS2(self, c=None):
@@ -1361,7 +1379,7 @@ class Terminal:
     @control('c')
     def DA(self, command=None, param=None):
         """Send Device Attributes"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @control('i')
     def MC(self, command=None, param=None):
@@ -1371,7 +1389,7 @@ class Terminal:
     @control('n')
     def DSR(self, command=None, param=None):
         """Device Status Report"""
-        return NotImplemented
+        return NoNeedToImplement
 
     # @control('p') with '>': xterm pointer mode
 
@@ -1383,7 +1401,7 @@ class Terminal:
     @control(' q')
     def DECSCUSR(self, command=None, param=None):
         """Set cursor style"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @control('"q')
     def DECSCA(self, command=None, param=None):
@@ -1393,24 +1411,24 @@ class Terminal:
     @control('t')
     def window_manipulation(self, command=None, param=None):
         """Window manipulation"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @control(' t')
     def DECSWBV(self, command=None, param=None):
         """Set Warning-Bell Volume"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @control(' u')
     def DECSMBV(self, command=None, param=None):
         """Set Margin-Bell Volume"""
-        return NotImplemented
+        return NoNeedToImplement
 
     # --------------------
 
     @ansi_mode(2)
     def KAM(self, value):
         """Keyboard Action Mode"""
-        return NotImplemented
+        return NoNeedToImplement
 
     @ansi_mode(12)
     def SRM(self, value):
@@ -1423,11 +1441,6 @@ class Terminal:
     # ================================================================
     #                  Things not implemented by xterm.
     # ================================================================
-
-    @command('\x00')        # ^@
-    def NUL(self, c=None):
-        """NULl"""
-        return NotImplemented
 
     @command('\x01')        # ^A
     def SOH(self, c=None):

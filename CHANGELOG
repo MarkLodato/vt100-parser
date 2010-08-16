@@ -1,6 +1,7 @@
 Version 0.3 - ????-??-??
 - Implement cursor save/restore (DECSC, DECRC, CSI s, CSI u).
 - Add support for modes.
+- Removed needless verbosity for some unimplemented commands.
 
 Version 0.2.1 - 2010-08-14
 - Fix a major bug that causes 0.2 to not work at all.
