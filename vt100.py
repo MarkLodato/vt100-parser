@@ -315,6 +315,7 @@ class Terminal:
         self.screen[:] = None
         self.row = 0
         self.col = 0
+        self.saved_pos = self.pos
         self.previous = '\0'
         self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(self.width)]
@@ -594,12 +595,13 @@ class Terminal:
     @escape('7')
     def DECSC(self, c=None):
         """Save Cursor"""
-        return NotImplemented
+        self.saved_pos = self.pos
 
     @escape('8')
     def DECRC(self, c=None):
         """Restore Cursor"""
-        return NotImplemented
+        self.pos = self.saved_pos
+        self.clip_column()
 
     @escape('D')
     def IND(self, c=None):
@@ -1100,7 +1102,7 @@ class Terminal:
     @control('s')
     def save_cursor(self, command=None, param=None):
         """Save cursor"""
-        return NotImplemented
+        self.DECSC()
         # Note: with param = "? Pm", set DEC private mode values
 
     @control('$t')
@@ -1111,7 +1113,7 @@ class Terminal:
     @control('u')
     def restore_cursor(self, command=None, param=None):
         """Restore cursor"""
-        return NotImplemented
+        self.DECRC()
 
 
 

@@ -19,7 +19,6 @@ Commands To Implement
 * Modes: IRM, LNM, DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound,
     alternate screen buffer
 * Reset: DECSTR
-* Cursor save/restore: DECSC, DECRC, CSI s, CSI u
 * Scroll region: DECSTBM, modify scroll()
 * DEC Rectangular Area: CECCARA, DECRARA
 * OSC command to configure the 256 xterm colors.
