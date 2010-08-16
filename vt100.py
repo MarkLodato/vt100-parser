@@ -959,7 +959,8 @@ class Terminal:
         """Set Graphics Attributes"""
         # TODO '>m' xterm
         l = param_list(param, 0)
-        for n in l:
+        l_iter = iter(l)
+        for n in l_iter:
             def color_256():
                 """xterm 256-color extension"""
                 # TODO options for:
@@ -970,8 +971,8 @@ class Terminal:
                 # TODO customizable colors through osc
                 # TODO move data to class level so subclasses can modify
                 try:
-                    m = next(l)
-                    o = next(l)
+                    m = next(l_iter)
+                    o = next(l_iter)
                 except StopIteration:
                     return
                 if m != 5:
