@@ -321,10 +321,12 @@ class Terminal:
         self.attr = {}
         self.clear()
 
-    @property
-    def pos(self):
+    def _pos_get(self):
         """The cursor position as (row, column)."""
         return self.row, self.col
+    def _pos_set(self, value):
+        self.row, self.col = value
+    pos = property(_pos_get, _pos_set)
 
     def clear(self):
         """Reset internal buffers for switching between states."""
