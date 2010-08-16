@@ -1183,18 +1183,20 @@ class Terminal:
         if param[0] == '?':
             modes = self.dec_modes
             param = param[1:]
+            mode_type = 'DEC'
         elif param[0] in '0123456789:;':
             modes = self.ansi_modes
+            mode_type = 'ANSI'
         else:
             self.debug(0, 'ignoring unknown mode string: %s', param)
             return
         for n in param_list(param, 0):
-            name = modes[n]
+            name = modes.get(n, None)
             f = None
             if name is not None:
                 f = getattr(self, name, None)
             if f is None:
-                self.debug(0, 'unrecognized mode: %s' % mode)
+                self.debug(0, 'unrecognized %s mode: %s' % (mode_type, n))
             else:
                 r = f(value)
                 if r is NotImplemented:
