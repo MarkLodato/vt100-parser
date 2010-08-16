@@ -1121,20 +1121,20 @@ class Terminal:
     # ---------- Control Strings ----------
 
     enter_osc = clear_on_enter
-    enter_dsc = clear_on_enter
+    enter_dcs = clear_on_enter
     enter_sos = clear_on_enter
     enter_apc = clear_on_enter
     enter_pm  = clear_on_enter
 
     # TODO OSC to set text parameters
     def parse_osc(self, c): self.parse_control_string(c)
-    def parse_dsc(self, c): self.parse_control_string(c)
+    def parse_dcs(self, c): self.parse_control_string(c)
     def parse_sos(self, c): self.parse_control_string(c)
     def parse_pm (self, c): self.parse_control_string(c)
     def parse_apc(self, c): self.parse_control_string(c)
 
     finish_osc = None
-    finish_dsc = None
+    finish_dcs = None
     finish_sos = None
     finish_apc = None
     finish_pm  = None
