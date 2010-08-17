@@ -1435,7 +1435,211 @@ class Terminal:
         """Send/Receive Mode"""
         return NotImplemented
 
-    # Tons of DEC Private Modes...
+    @dec_mode(1)
+    def DECCKM(self, value):
+        """Cursor Key Mode"""
+        return NoNeedToImplement
+
+    @dec_mode(2)
+    def DECANM(self, value):
+        """ANSI/VT52 Mode"""
+        return NotImplemented
+
+    @dec_mode(4)
+    def DECSCLM(self, value):
+        """(Smooth) Scrolling Mode"""
+        return NoNeedToImplement
+
+    @dec_mode(8)
+    def DECARM(self, value):
+        """Auto Repeat"""
+        return NoNeedToImplement
+
+    @dec_mode(9)
+    def send_mouse_xy_on_press(self, value):
+        """Send Mouse X & Y on button press."""
+        return NoNeedToImplement
+
+    @dec_mode(10)
+    def show_toolbar(self, value):
+        """Show toolbar"""
+        return NoNeedToImplement
+
+    @dec_mode(12)
+    def blinking_cursor(self, value):
+        """Blinking Cursor"""
+        return NoNeedToImplement
+
+    @dec_mode(18)
+    def DECPFF(self, value):
+        """Print Form Feed Mode"""
+        return NotImplemented
+
+    @dec_mode(19)
+    def DECPEX(self, value):
+        """Print Extent Mode"""
+        return NotImplemented
+
+    @dec_mode(25)
+    def DECTCEM(self, value):
+        """Text Cursor Enable Mode"""
+        return NoNeedToImplement
+
+    @dec_mode(30)
+    def show_scrollbar(self, value):
+        """Show scrollbar"""
+        return NoNeedToImplement
+
+    @dec_mode(35)
+    def font_shifting_mode(self, value):
+        """Enable font-shifting functions"""
+        return NotImplemented
+
+    @dec_mode(38)
+    def DECTEK(self, value):
+        """Tektronix Mode"""
+        return NotImplemented
+
+    @dec_mode(40)
+    def allow_80_to_132_mode(self, value):
+        """Allow 80 -> 132 Mode"""
+        return NotImplemented
+
+    @dec_mode(41)
+    def more_fix(self, value):
+        """more(1) fix"""
+        return NotImplemented
+
+    @dec_mode(42)
+    def DECNRCM(self, value):
+        """Character Set Mode (National Replacement Character Sets)"""
+        return NotImplemented
+
+    @dec_mode(44)
+    def margin_bell(self, value):
+        """Margin bell"""
+        return NoNeedToImplement
+
+    @dec_mode(46)
+    def logging_mode(self, value):
+        """Logging mode"""
+        return NotImplemented
+
+    @dec_mode(66)
+    def DECNKM(self, value):
+        """Numeric Keypad Mode"""
+        return NoNeedToImplement
+
+    @dec_mode(67)
+    def DECBKM(self, value):
+        """Backarrow Key Mode"""
+        return NoNeedToImplement
+
+    @dec_mode(1000)
+    def send_mouse_xy_on_press_and_release(self, value):
+        """Send Mouse X & Y on button press and release."""
+        return NoNeedToImplement
+
+    @dec_mode(1001)
+    def hilite_mouse_tracking(self, value):
+        """Hilite Mouse Tracking"""
+        return NoNeedToImplement
+
+    @dec_mode(1002)
+    def cell_motion_mouse_tracking(self, value):
+        """Cell Motion Mouse Tracking"""
+        return NoNeedToImplement
+
+    @dec_mode(1003)
+    def all_motion_mouse_tracking(self, value):
+        """All Motion Mouse Tracking"""
+        return NoNeedToImplement
+
+    @dec_mode(1004)
+    def send_focus_events(self, value):
+        """Send FocusIn/FocusOut Events"""
+        return NoNeedToImplement
+
+    @dec_mode(1034)
+    def eight_bit_input(self, value):
+        """Interpret "meta" key, sets eighth bit."""
+        return NoNeedToImplement
+
+    @dec_mode(1035)
+    def num_lock_modifier(self, value):
+        """Enable special modifiers for Alt and Num-Lock keys."""
+        return NoNeedToImplement
+
+    @dec_mode(1036)
+    def meta_sends_escape(self, value):
+        """Send ESC when Meta modifies a key."""
+        return NoNeedToImplement
+
+    @dec_mode(1037)
+    def send_del_for_delete(self, value):
+        """Send DEL from the editing-keypad Delete key."""
+        return NoNeedToImplement
+
+    @dec_mode(1039)
+    def alt_sends_escape(self, value):
+        """Send ESC when Alt modifies a key."""
+        return NoNeedToImplement
+
+    @dec_mode(1040)
+    def keep_selection(self, value):
+        """Keep selection even if not highlighted."""
+        return NoNeedToImplement
+
+    @dec_mode(1041)
+    def select_to_clipboard(self, value):
+        """Use the Clipboard selection."""
+        return NoNeedToImplement
+
+    @dec_mode(1042)
+    def bell_is_urgent(self, value):
+        """Enable Urgency window manager hint when Control-G is received."""
+        return NoNeedToImplement
+
+    @dec_mode(1043)
+    def pop_on_bell(self, value):
+        """Enable raising of the window when Control-G is received."""
+        return NoNeedToImplement
+
+    @dec_mode(1050)
+    def terminfo_function_key_mode(self, value):
+        """Set terminfo/termcap function-key mode."""
+        return NoNeedToImplement
+
+    @dec_mode(1051)
+    def sun_function_key_mode(self, value):
+        """Set Sun function-key mode."""
+        return NoNeedToImplement
+
+    @dec_mode(1052)
+    def hp_function_key_mode(self, value):
+        """Set HP function-key mode."""
+        return NoNeedToImplement
+
+    @dec_mode(1053)
+    def sco_function_key_mode(self, value):
+        """Set SCO function-key mode."""
+        return NoNeedToImplement
+
+    @dec_mode(1060)
+    def legacy_keyboard_emulation(self, value):
+        """Set legacy keyboard emulation (X11R6)."""
+        return NoNeedToImplement
+
+    @dec_mode(1061)
+    def vt220_keyboard_emulation(self, value):
+        """Set VT220 keyboard emulation."""
+        return NoNeedToImplement
+
+    @dec_mode(2004)
+    def bracketed_paste(self, value):
+        """Set bracketed paste mode."""
+        return NoNeedToImplement
+
 
 
     # ================================================================
