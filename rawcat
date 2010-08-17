@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """\
-USAGE: %prog [-b BYTES] [-w MSEC] FILE...
+USAGE: %prog [-b BYTES] [-r] [-w MSEC] FILE...
 
 Print the given file(s) to standard output without converting LF to CRLF.
 
@@ -51,7 +51,7 @@ class RawMode:
     def __exit__(self, exc_type, exc_val, exc_tb):
         termios.tcsetattr(self.f, termios.TCSAFLUSH, self.saved)
 
-def rawcat(files, outfile, bufsiz=None, wait=None):
+def rawcat(files, outfile, bufsiz=None, wait=None, reset=False):
     if wait is None:
         if not bufsiz:
             bufsiz = 4096
@@ -61,6 +61,8 @@ def rawcat(files, outfile, bufsiz=None, wait=None):
             bufsiz = 1
         wait /= 1000.0
     with RawMode(outfile):
+        if reset:
+            outfile.write('\x1bc')
         for filename in files:
             if filename == '-':
                 f = sys.stdout
@@ -84,10 +86,13 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage, description=desc)
     parser.add_option('-b', '--buffer-size', type='int', metavar='BYTES',
             help='Read this many bytes at at time (default: 1 if -w, else 4096)')
+    parser.add_option('-r', '--reset', action='store_true',
+            help='Issue a terminal reset before starting output')
     parser.add_option('-w', '--wait', type='float', metavar='MSEC',
             help='Milliseconds to wait between buffers (default: no wait)')
     options, args = parser.parse_args()
     if not args:
         parser.print_usage()
         sys.exit(1)
-    rawcat(args, sys.stdout, bufsiz=options.buffer_size, wait=options.wait)
+    rawcat(args, sys.stdout, bufsiz=options.buffer_size, wait=options.wait,
+            reset=options.reset)
