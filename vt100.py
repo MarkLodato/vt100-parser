@@ -306,7 +306,8 @@ class Terminal:
         self.width = width
         self.height = height
         self.format_line = format_line
-        self.screen = np.array([[None] * width] * height, dtype=object)
+        self.main_screen = np.array([[None] * width] * height, dtype=object)
+        self.alt_screen = np.array([[None] * width] * height, dtype=object)
         self.reset()
 
     # ---------- Utilities ----------
@@ -316,10 +317,12 @@ class Terminal:
         self.state = 'ground'
         self.prev_state = None
         self.next_state = None
-        self.screen[:] = None
+        self.main_screen[:] = None
+        self.alt_screen[:] = None
+        self.screen = self.main_screen
         self.row = 0
         self.col = 0
-        self.saved_pos = self.pos
+        self.saved_pos = [self.pos, self.pos]
         self.previous = '\0'
         self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(self.width)]
@@ -332,6 +335,10 @@ class Terminal:
     def _pos_set(self, value):
         self.row, self.col = value
     pos = property(_pos_get, _pos_set)
+
+    def is_alt_screen(self):
+        """Return True if in alternate screen mode; False otherwise."""
+        return self.screen is self.alt_screen
 
     def clear(self):
         """Reset internal buffers for switching between states."""
@@ -357,7 +364,8 @@ class Terminal:
         """Scroll the scrolling region n lines upward (data moves up) between
         rows top (inclusive, default 0) and bottom (exclusive, default
         height).  Any data moved off the top of the screen (if top is 0/None
-        and save is None, or if save is True) is saved to the history."""
+        and save is None, or if save is True) is saved to the history.
+        If in alternate screen buffer, no history is saved."""
         # TODO add option to print instead of adding to history
         # TODO scroll region
         if top is None:
@@ -365,6 +373,8 @@ class Terminal:
         if bottom is None:
             bottom = self.height
         s = self.screen
+        if self.is_alt_screen():
+            save = False
         span = bottom-top
         if n > 0:
             # TODO transform history?
@@ -452,7 +462,7 @@ class Terminal:
         if history:
             lines.extend(itertools.imap(self.fixup_line, self.history))
         if screen:
-            lines.extend(itertools.imap(self.fixup_line, self.screen))
+            lines.extend(itertools.imap(self.fixup_line, self.main_screen))
         if not lines:
             return
 
@@ -608,12 +618,12 @@ class Terminal:
     @escape('7')
     def DECSC(self, c=None):
         """Save Cursor"""
-        self.saved_pos = self.pos
+        self.saved_pos[int(self.is_alt_screen())] = self.pos
 
     @escape('8')
     def DECRC(self, c=None):
         """Restore Cursor"""
-        self.pos = self.saved_pos
+        self.pos = self.saved_pos[int(self.is_alt_screen())]
         self.clip_column()
 
     @escape('D')
@@ -1260,7 +1270,10 @@ class Terminal:
     @dec_mode(1047)
     def alternate_screen_buffer_mode(self, value):
         """Alternate Screen Buffer"""
-        return NotImplemented
+        if value:
+            self.screen = self.alt_screen
+        else:
+            self.screen = self.main_screen
 
     @dec_mode(1048)
     def save_cursor_mode(self, value):
@@ -1276,8 +1289,8 @@ class Terminal:
         screen."""
         if value:
             self.DECSC()
-            self.ED(self, param='2')
             self.alternate_screen_buffer_mode(True)
+            self.ED(self, param='2')
         else:
             self.alternate_screen_buffer_mode(False)
             self.DECRC()

@@ -16,8 +16,7 @@ Testing
 Commands To Implement
 =====================
 
-* Modes: IRM, LNM, DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound,
-    alternate screen buffer
+* Modes: IRM, LNM, DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound
 * Reset: DECSTR
 * Scroll region: DECSTBM, modify scroll()
 * DEC Rectangular Area: CECCARA, DECRARA
@@ -32,6 +31,7 @@ Options
 * 88- vs 256-color
 * 8-color vs 16-color
 * Non xterm?
+* Ability to print alternative screen buffer
 
 
 Output
