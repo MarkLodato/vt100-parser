@@ -718,6 +718,9 @@ class Terminal:
         if not m:
             return self.invalid_control_sequence()
         param, command = m.groups()
+        if param and param[0] in '<=>?':
+            command = param[0] + command
+            param = param[1:]
 
         name = self.control_sequences.get(command, None)
         f = None
@@ -826,7 +829,6 @@ class Terminal:
         Ps = 2  -> Erase All
         Ps = 3  -> Erase Saved Lines (xterm)
         """
-        # TODO param =~ ^\?   selective erase
         n = param_list(param, 0)[0]
         if n == 0:
             self.screen[self.row, self.col:] = None
@@ -843,6 +845,16 @@ class Terminal:
             # I see no point in emulating this behavior.
             self.history[:] = []
 
+    @control('?J')
+    def DECSED(self, command=None, param=None):
+        """Selective Erase in Display
+
+        Ps = 0  -> Selective Erase Below (default)
+        Ps = 1  -> Selective Erase Above
+        Ps = 2  -> Selective Erase All
+        """
+        return NotImplemented
+
     @control('K')
     def EL(self, command=None, param=None):
         """Erase in Line
@@ -851,7 +863,6 @@ class Terminal:
         Ps = 1  -> Erase to Left
         Ps = 2  -> Erase All
         """
-        # TODO param =~ ^\?   selective erase
         n = param_list(param, 0)[0]
         self.clip_column()
         if n == 0:
@@ -860,6 +871,16 @@ class Terminal:
             self.screen[self.row, :self.col+1] = None
         elif n == 2:
             self.screen[self.row, :] = None
+
+    @control('?J')
+    def DECSEL(self, command=None, param=None):
+        """Selective Erase in Line
+
+        Ps = 0  -> Selective Erase to Right (default)
+        Ps = 1  -> Selective Erase to Left
+        Ps = 2  -> Selective Erase All
+        """
+        return NotImplemented
 
     @control('L')
     def IL(self, command=None, param=None):
@@ -963,7 +984,12 @@ class Terminal:
     @control('h')
     def SM(self, command=None, param=None):
         """Set Mode"""
-        return self.dispatch_modes(param, True)
+        return self.dispatch_modes('ANSI', param, True)
+
+    @control('?h')
+    def DECSM(self, command=None, param=None):
+        """Set DEC Private Mode"""
+        return self.dispatch_modes('DEC', param, True)
 
     @control('j')
     def HPB(self, command=None, param=None):
@@ -978,7 +1004,12 @@ class Terminal:
     @control('l')
     def RM(self, command=None, param=None):
         """Reset Mode"""
-        return self.dispatch_modes(param, False)
+        return self.dispatch_modes('ANSI', param, False)
+
+    @control('?l')
+    def DECRM(self, command=None, param=None):
+        """Reset DEC Private Mode"""
+        return self.dispatch_modes('DEC', param, False)
 
     @control('m')
     def SGR(self, command=None, param=None):
@@ -1119,7 +1150,11 @@ class Terminal:
     def DECSTBM(self, command=None, param=None):
         """Set Scrolling Region"""
         return NotImplemented
-        # Note: with param = "? Pm", restore DEC private mode values
+
+    @control('?r')
+    def restore_dec_private_mode(self, command=None, param=None):
+        """Restore DEC Private Mode Values"""
+        return NotImplemented
 
     @control('$r')
     def DECCARA(self, command=None, param=None):
@@ -1130,7 +1165,11 @@ class Terminal:
     def save_cursor(self, command=None, param=None):
         """Save cursor"""
         self.DECSC()
-        # Note: with param = "? Pm", set DEC private mode values
+
+    @control('?s')
+    def save_dec_private_mode(self, command=None, param=None):
+        """Save DEC Private Mode Values"""
+        return NotImplemented
 
     @control('$t')
     def DECRARA(self, command=None, param=None):
@@ -1204,18 +1243,15 @@ class Terminal:
 
     # ---------- Modes ----------
 
-    def dispatch_modes(self, param, value):
+    def dispatch_modes(self, mode_type, param, value):
         if not param:
             return
-        if param[0] == '?':
+        if mode_type == 'DEC':
             modes = self.dec_modes
-            param = param[1:]
-            mode_type = 'DEC'
-        elif param[0] in '0123456789:;':
+        elif mode_type == 'ANSI':
             modes = self.ansi_modes
-            mode_type = 'ANSI'
         else:
-            self.debug(0, 'ignoring unknown mode string: %s', param)
+            self.debug(0, 'unknown mode type: %s' % mode_type)
             return
         for n in param_list(param, 0):
             name = modes.get(n, None)
@@ -1389,22 +1425,41 @@ class Terminal:
 
     # --------------------
 
-    @control('c')
+    @control('>T')
+    def xterm_title_mode_reset(self, command=None, param=None):
+        """Xterm reset title mode features"""
+        return NotImplemented
+
+    @control('>c')  # Secondary DA
+    @control('c')   # Primary DA
     def DA(self, command=None, param=None):
         """Send Device Attributes"""
         return NoNeedToImplement
 
+    @control('?i')
     @control('i')
     def MC(self, command=None, param=None):
         """Media Copy"""
         return NotImplemented
 
+    @control('>m')
+    def xterm_resource_value_modifiers(self, command=None, param=None):
+        return NoNeedToImplement
+
+    @control('>n')
+    def xterm_disable_modifiers(self, command=None, param=None):
+        return NoNeedToImplement
+
+    @control('?n')
     @control('n')
     def DSR(self, command=None, param=None):
         """Device Status Report"""
         return NoNeedToImplement
 
-    # @control('p') with '>': xterm pointer mode
+    @control('>p')
+    def xterm_pointer_mode(self, command=None, param=None):
+        """Set resource value pointerMode"""
+        return NoNeedToImplement
 
     @control('"p')
     def DECSCL(self, command=None, param=None):
@@ -1424,6 +1479,11 @@ class Terminal:
     @control('t')
     def window_manipulation(self, command=None, param=None):
         """Window manipulation"""
+        return NoNeedToImplement
+
+    @control('>t')
+    def xterm_title_mode_feature(self, command=None, param=None):
+        """Set features of the title modes"""
         return NoNeedToImplement
 
     @control(' t')
