@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """\
-USAGE: %prog [-b BYTES] [-r] [-w MSEC] FILE...
+USAGE: %prog [-b BYTES] [-r] [-s] [-w MSEC] FILE...
 
 Print the given file(s) to standard output without converting LF to CRLF.
 
@@ -51,7 +51,39 @@ class RawMode:
     def __exit__(self, exc_type, exc_val, exc_tb):
         termios.tcsetattr(self.f, termios.TCSAFLUSH, self.saved)
 
-def rawcat(files, outfile, bufsiz=None, wait=None, reset=False):
+class Status (object):
+    textify = [ 'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL',
+                'BS',  'HT',  'LF',  'VT',  'FF',  'CR',  'SO',  'SI',
+                'DLE', 'DC1', 'DC2', 'DC3', 'DC4', 'NAK', 'SYN', 'ETB',
+                'CAN', 'EM',  'SUB', 'ESC', 'FS',  'GS',  'RS',  'US',  'SP' ]
+    textify += [ chr(x) for x in range(len(textify), 127) ]
+    textify += [ 'DEL' ]
+    textify += [ '\\x%02d' % x for x in range(128,256) ]
+
+    def __init__(self, filename):
+        if filename:
+            self.opened = True
+            self.f = open(filename, 'w', 0)
+        else:
+            self.opened = False
+
+    def write(self, s):
+        if self.opened:
+            textify = self.textify
+            t = ' '.join(textify[ord(x)] for x in s) + '\n'
+            self.f.write(t)
+            self.f.flush()
+
+    def close(self):
+        if self.opened:
+            self.opened = False
+            self.f.close()
+
+    def __del__(self):
+        self.close()
+
+def rawcat(files, outfile, bufsiz=None, wait=None, reset=False,
+        status_file=None):
     if wait is None:
         if not bufsiz:
             bufsiz = 4096
@@ -60,6 +92,9 @@ def rawcat(files, outfile, bufsiz=None, wait=None, reset=False):
         if not bufsiz:
             bufsiz = 1
         wait /= 1000.0
+    if not wait:
+        status_file = None
+    status = Status(status_file)
     with RawMode(outfile):
         if reset:
             outfile.write('\x1bc')
@@ -74,10 +109,12 @@ def rawcat(files, outfile, bufsiz=None, wait=None, reset=False):
                     break
                 outfile.write(buf)
                 if wait:
+                    status.write(buf)
                     outfile.flush()
                     time.sleep(wait)
             if filename != '-':
                 f.close()
+    status.close()
 
 if __name__ == "__main__":
     doc = globals()['__doc__']
@@ -88,6 +125,8 @@ if __name__ == "__main__":
             help='Read this many bytes at at time (default: 1 if -w, else 4096)')
     parser.add_option('-r', '--reset', action='store_true',
             help='Issue a terminal reset before starting output')
+    parser.add_option('-s', '--status', metavar='FILE',
+            help='When run with `-w`, print status to this file')
     parser.add_option('-w', '--wait', type='float', metavar='MSEC',
             help='Milliseconds to wait between buffers (default: no wait)')
     options, args = parser.parse_args()
@@ -95,4 +134,4 @@ if __name__ == "__main__":
         parser.print_usage()
         sys.exit(1)
     rawcat(args, sys.stdout, bufsiz=options.buffer_size, wait=options.wait,
-            reset=options.reset)
+            reset=options.reset, status_file=options.status)
