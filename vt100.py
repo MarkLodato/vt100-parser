@@ -1019,7 +1019,6 @@ class Terminal:
     @control('m')
     def SGR(self, command=None, param=None):
         """Set Graphics Attributes"""
-        # TODO '>m' xterm
         l = param_list(param, 0)
         l_iter = iter(l)
         for n in l_iter:
