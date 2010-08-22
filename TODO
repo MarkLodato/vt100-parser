@@ -6,9 +6,10 @@ Testing
 * 40-49: RIS
 * 50-59: DECSEL, DECSED
 * 70-79: HT, HTS, CHT, CBT, TBC
-* 80-99: modes
-* 100+: DCS, SOS, OSC, PM, APC
+* 90-99: alternate screen buffer
+* 100-109: modes
 * 200+: SGR
+* 300+: DCS, SOS, OSC, PM, APC
 
 * test HTML output (new framework needed?)
 
