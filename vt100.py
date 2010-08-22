@@ -323,6 +323,8 @@ class Terminal:
         self.row = 0
         self.col = 0
         self.saved_pos = [self.pos, self.pos]
+        self.margin_top = 0
+        self.margin_bottom = self.height - 1
         self.previous = '\0'
         self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(self.width)]
@@ -367,11 +369,10 @@ class Terminal:
         and save is None, or if save is True) is saved to the history.
         If in alternate screen buffer, no history is saved."""
         # TODO add option to print instead of adding to history
-        # TODO scroll region
         if top is None:
-            top = 0
+            top = self.margin_top
         if bottom is None:
-            bottom = self.height
+            bottom = self.margin_bottom + 1
         s = self.screen
         if self.is_alt_screen():
             save = False
@@ -630,10 +631,10 @@ class Terminal:
     def IND(self, c=None):
         """Index"""
         self.clip_column()
-        if self.row < self.height - 1:
-            self.row += 1
-        else:
+        if self.row == self.margin_bottom:
             self.scroll(1)
+        elif self.row < self.height - 1:
+            self.row += 1
 
     @escape('E')
     def NEL(self, c=None):
@@ -650,10 +651,10 @@ class Terminal:
     def RI(self, c=None):
         """Reverse Index (reverse line feed)"""
         self.clip_column()
-        if self.row > 0:
-            self.row -= 1
-        else:
+        if self.row == self.margin_top:
             self.scroll(-1)
+        elif self.row > 0:
+            self.row -= 1
 
     @escape('P')
     def DCS(self, c=None):
@@ -766,14 +767,20 @@ class Terminal:
         """Cursor Up"""
         n = param_list(param, 1)[0]
         self.clip_column()
-        self.row = clip(self.row-n, self.height)
+        if self.row >= self.margin_top:
+            self.row = clip(self.row-n, self.margin_top, self.margin_bottom+1)
+        else:
+            self.row = clip(self.row-n, self.height)
 
     @control('B')
     def CUD(self, command=None, param=None):
         """Cursor Down"""
         n = param_list(param, 1)[0]
         self.clip_column()
-        self.row = clip(self.row+n, self.height)
+        if self.row <= self.margin_bottom:
+            self.row = clip(self.row+n, self.margin_top, self.margin_bottom+1)
+        else:
+            self.row = clip(self.row+n, self.height)
 
     @control('C')
     def CUF(self, command=None, param=None):
@@ -885,18 +892,18 @@ class Terminal:
     @control('L')
     def IL(self, command=None, param=None):
         """Insert Line(s)"""
-        # TODO scroll region?
         n = param_list(param, 1)[0]
         self.clip_column()
-        self.scroll(-n, top=self.row, save=False)
+        if self.margin_top <= self.row <= self.margin_bottom:
+            self.scroll(-n, top=self.row, save=False)
 
     @control('M')
     def DL(self, command=None, param=None):
         """Delete Line(s)"""
-        # TODO scroll region?
         n = param_list(param, 1)[0]
         self.clip_column()
-        self.scroll(n, top=self.row, save=False)
+        if self.margin_top <= self.row <= self.margin_bottom:
+            self.scroll(n, top=self.row, save=False)
 
     @control('P')
     def DCH(self, command=None, param=None):
@@ -910,14 +917,12 @@ class Terminal:
     @control('S')
     def SU(self, command=None, param=None):
         """Scroll Up"""
-        # TODO scroll region?
         n = param_list(param, 1)[0]
         self.scroll(n)
 
     @control('T')
     def SD(self, command=None, param=None):
         """Scroll Down / Mouse Tracking"""
-        # TODO scroll region?
         # TODO mouse tracking
         n = param_list(param, 1)[0]
         self.scroll(-n)
@@ -1148,8 +1153,16 @@ class Terminal:
 
     @control('r')
     def DECSTBM(self, command=None, param=None):
-        """Set Scrolling Region"""
-        return NotImplemented
+        """Set Top and Bottom Margins (Scrolling Region)"""
+        self.pos = (0,0)
+        top, bottom = param_list(param, None, min_length=2)[:2]
+        if top is None:
+            top = 1
+        if bottom is None or bottom > self.height:
+            bottom = self.height
+        if bottom > top:
+            self.margin_top = top - 1
+            self.margin_bottom = bottom - 1
 
     @control('?r')
     def restore_dec_private_mode(self, command=None, param=None):
