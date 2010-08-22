@@ -322,7 +322,7 @@ class Terminal:
         self.screen = self.main_screen
         self.row = 0
         self.col = 0
-        self.saved_pos = [self.pos, self.pos]
+        self.saved_cursor = [self.default_cursor, self.default_cursor]
         self.margin_top = 0
         self.margin_bottom = self.height - 1
         self.previous = '\0'
@@ -330,6 +330,16 @@ class Terminal:
         self.tabstops = [(i%8)==0 for i in range(self.width)]
         self.attr = {}
         self.clear()
+
+    default_cursor = {
+            'pos'           : (0, 0),
+            'attr'          : {},
+            'autowrap'      : True,
+            'reverse_wrap'  : False,
+            'origin_mode'   : False,
+            # TODO: pending SS2 or SS3
+            # TODO: selective erase
+            }
 
     def _pos_get(self):
         """The cursor position as (row, column)."""
@@ -619,12 +629,23 @@ class Terminal:
     @escape('7')
     def DECSC(self, c=None):
         """Save Cursor"""
-        self.saved_pos[int(self.is_alt_screen())] = self.pos
+        self.saved_cursor[int(self.is_alt_screen())] = {
+            'pos'           : self.pos,
+            'attr'          : self.attr.copy(),
+            'autowrap'      : self.DECAWM(None),
+            'reverse_wrap'  : self.reverse_wraparound_mode(None),
+            'origin_mode'   : self.DECOM(None),
+            }
 
     @escape('8')
     def DECRC(self, c=None):
         """Restore Cursor"""
-        self.pos = self.saved_pos[int(self.is_alt_screen())]
+        cursor = self.saved_cursor[int(self.is_alt_screen())]
+        self.pos = cursor['pos']
+        self.attr = cursor['attr'].copy()
+        self.DECAWM(cursor['autowrap'])
+        self.reverse_wraparound_mode(cursor['reverse_wrap'])
+        self.DECOM(cursor['origin_mode'])
         self.clip_column()
 
     @escape('D')
@@ -1160,7 +1181,7 @@ class Terminal:
         # TODO Set all character sets to ASCII
         self.SGR()
         self.DECSCA(False)
-        self.saved_pos = [(0,0), (0,0)]
+        self.saved_cursor = [self.default_cursor, self.default_cursor]
 
     @control('r')
     def DECSTBM(self, command=None, param=None):
