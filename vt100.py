@@ -1330,6 +1330,8 @@ class Terminal:
     @dec_mode(1047)
     def alternate_screen_buffer_mode(self, value):
         """Alternate Screen Buffer"""
+        if value is None:
+            return self.screen is self.alt_screen
         if value:
             self.screen = self.alt_screen
         else:
@@ -1338,6 +1340,8 @@ class Terminal:
     @dec_mode(1048)
     def save_cursor_mode(self, value):
         """Save cursor"""
+        if value is None:
+            return None
         if value:
             return self.DECSC()
         else:
@@ -1347,6 +1351,8 @@ class Terminal:
     def alternate_screen_buffer_clearing_mode(self, value):
         """Save cursor, switch to alternate screen buffer, and clear the
         screen."""
+        if value is None:
+            return None
         if value:
             self.DECSC()
             self.alternate_screen_buffer_mode(True)
