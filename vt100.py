@@ -1148,7 +1148,19 @@ class Terminal:
     @control('!p')
     def DECSTR(self, command=None, param=None):
         """Soft Terminal Reset"""
-        return NotImplemented
+        self.DECTCEM(True)
+        self.IRM(True)
+        self.DECOM(False)
+        self.DECAWM(True)
+        self.reverse_wraparound_mode(False)
+        self.KAM(False)
+        self.DECCKM(False)
+        self.DECNKM(False)
+        self.DECSTBM()
+        # TODO Set all character sets to ASCII
+        self.SGR()
+        self.DECSCA(False)
+        self.saved_pos = [(0,0), (0,0)]
 
     @control('r')
     def DECSTBM(self, command=None, param=None):

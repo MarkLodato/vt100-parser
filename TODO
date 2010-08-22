@@ -3,7 +3,7 @@ Testing
 
 * 10-19: ESC quirks, CSI quirks
 * 30-39: CHA, HPA, VPA
-* 40-49: RIS
+* 40-49: RIS, DECSTR (how does this affect alternate screen buffer?)
 * 50-59: DECSEL, DECSED
 * 70-79: HT, HTS, CHT, CBT, TBC
 * 90-99: alternate screen buffer
@@ -18,7 +18,6 @@ Commands To Implement
 =====================
 
 * Modes: IRM, LNM, DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound
-* Reset: DECSTR
 * DEC Rectangular Area: CECCARA, DECRARA
 * OSC command to configure the 256 xterm colors.
 * Alternate fonts / character sets?
