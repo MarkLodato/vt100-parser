@@ -302,7 +302,6 @@ class Terminal:
     def __init__(self, height=24, width=80, verbosity=False,
             format_line = format_text):
         self.verbosity = verbosity
-        self.history = []
         self.width = width
         self.height = height
         self.format_line = format_line
@@ -317,6 +316,7 @@ class Terminal:
         self.state = 'ground'
         self.prev_state = None
         self.next_state = None
+        self.history = []
         self.main_screen[:] = None
         self.alt_screen[:] = None
         self.screen = self.main_screen
