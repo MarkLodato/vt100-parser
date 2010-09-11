@@ -54,9 +54,3 @@ Output
 
   However, I'm not sure how to specify that there should be exactly 80 (or
   whatever) columns.  Also, this would require some tracking of wrapping.
-
-
-Miscellaneous
-=============
-
-* Implement custom screen object to remove dependence on Numpy.

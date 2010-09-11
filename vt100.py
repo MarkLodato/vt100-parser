@@ -64,7 +64,6 @@ REQUIREMENTS
 ============
 
 * Python 2.6
-* Numpy
 
 
 TODO
@@ -127,10 +126,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import collections
 import itertools
 import re
 import sys
-import numpy as np
 from optparse import OptionParser
 
 
@@ -281,6 +280,61 @@ class NoNeedToImplement (Exception):
     pass
 
 
+class Screen:
+    """A two-dimensional collection of characters."""
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height= height
+        self.clear()
+
+    def __iter__(self):
+        return iter(self.rows)
+
+    def __setitem__(self, idx, value):
+        row, col = idx
+        self.rows[row][col] = value
+
+    def clear(self):
+        """Set all elements to None."""
+        self.rows = [[None] * self.width for i in range(self.height)]
+
+    def clear_row(self, row, start=0, stop=None):
+        """Set to None all elements on row `row` and columns `start` to
+        `stop`-1, inclusive."""
+        if start < 0:
+            start = 0
+        if stop is None or stop > self.width:
+            stop = self.width
+        row = self.rows[row]
+        for c in xrange(start, stop):
+            row[c] = None
+
+    def clear_rows(self, start=0, stop=None):
+        """Set to None all elements on rows `start` to `stop`-1, inclusive."""
+        if start < 0:
+            start = 0
+        if stop is None or stop > self.height:
+            stop = self.height
+        for r in xrange(start, stop):
+            self.rows[r] = [None] * self.width
+
+    def shift_row(self, row, col, amount=1, fill=None):
+        """Move the elements on row `row` at and to the right of column
+        `col`, to the right by `amount` places (negative means left).
+        Elements shifted past either end are discarded.  New elements are set
+        to `fill`."""
+        row = self.rows[row]
+        if amount > 0:
+            amount = min(amount, self.width-col)
+            row[col+amount:] = row[col:-amount]
+            row[col:col+amount] = [fill] * amount
+        else:
+            amount = min(-amount, self.width-col)
+            row[col:-amount] = row[col+amount:]
+            row[-amount:] = [fill] * amount
+
+
 class Terminal:
 
     # ---------- Decorators for Defining Sequences ----------
@@ -305,8 +359,8 @@ class Terminal:
         self.width = width
         self.height = height
         self.format_line = format_line
-        self.main_screen = np.array([[None] * width] * height, dtype=object)
-        self.alt_screen = np.array([[None] * width] * height, dtype=object)
+        self.main_screen = Screen(width, height)
+        self.alt_screen = Screen(width, height)
         self.reset()
 
     # ---------- Utilities ----------
@@ -317,8 +371,8 @@ class Terminal:
         self.prev_state = None
         self.next_state = None
         self.history = []
-        self.main_screen[:] = None
-        self.alt_screen[:] = None
+        self.main_screen.clear()
+        self.alt_screen.clear()
         self.screen = self.main_screen
         self.row = 0
         self.col = 0
@@ -390,20 +444,20 @@ class Terminal:
         if n > 0:
             # TODO transform history?
             if (save is None and top == 0) or save:
-                self.history.extend( s[top:top+n].copy() )
+                self.history.extend( s.rows[top:top+n] )
                 if n > span:
                     extra = n - span
                     self.history.extend( [[None]*self.width]*extra )
             if n > span:
                 n = span
-            s[top:bottom-n] = s[top+n:bottom]
-            s[bottom-n:bottom] = None
+            s.rows[top:bottom-n] = s.rows[top+n:bottom]
+            s.clear_rows(start=bottom-n, stop=bottom)
         elif n < 0:
             n = -n
             if n > span:
                 n = span
-            s[top+n:bottom] = s[top:bottom-n]
-            s[top:top+n] = None
+            s.rows[top+n:bottom] = s.rows[top:bottom-n]
+            s.clear_rows(start=top, stop=top+n)
 
     def ignore(self, c):
         """Ignore the character."""
@@ -779,9 +833,7 @@ class Terminal:
         self.clip_column()
         r = self.row
         c = self.col
-        right = self.screen[r,c+n:]
-        right[:] = self.screen[r,c:c+len(right)]
-        self.screen[r,c:c+n] = Character(' ')
+        self.screen.shift_row(r, c, amount=n, fill=Character(' '))
 
     @control('A')
     def CUU(self, command=None, param=None):
@@ -859,13 +911,13 @@ class Terminal:
         """
         n = param_list(param, 0)[0]
         if n == 0:
-            self.screen[self.row, self.col:] = None
-            self.screen[self.row+1:, :] = None
+            self.screen.clear_row(self.row, start=self.col)
+            self.screen.clear_rows(start=self.row+1)
         elif n == 1:
-            self.screen[:self.row, :] = None
-            self.screen[self.row, :self.col+1] = None
+            self.screen.clear_rows(stop=self.row)
+            self.screen.clear_row(self.row, stop=self.col+1)
         elif n == 2:
-            self.screen[:] = None
+            self.screen.clear()
         elif n == 3:
             # Note: xterm's interpetation of this is a little funky.  It does
             # not erase the entire history, but saves a number of lines
@@ -894,11 +946,11 @@ class Terminal:
         n = param_list(param, 0)[0]
         self.clip_column()
         if n == 0:
-            self.screen[self.row, self.col:] = None
+            self.screen.clear_row(self.row, start=self.col)
         elif n == 1:
-            self.screen[self.row, :self.col+1] = None
+            self.screen.clear_row(self.row, stop=self.col+1)
         elif n == 2:
-            self.screen[self.row, :] = None
+            self.screen.clear_row(self.row)
 
     @control('?J')
     def DECSEL(self, command=None, param=None):
@@ -932,8 +984,7 @@ class Terminal:
         n = param_list(param, 1)[0]
         r = self.row
         c = self.col
-        self.screen[r,c:-n] = self.screen[r,c+n:]
-        self.screen[r,-n:] = None
+        self.screen.shift_row(r, c, amount=-n, fill=None)
 
     @control('S')
     def SU(self, command=None, param=None):
@@ -952,7 +1003,7 @@ class Terminal:
     def ECH(self, command=None, param=None):
         """Erase Character"""
         n = param_list(param, 1)[0]
-        self.screen[self.row, self.col:self.col+n] = None
+        self.screen.clear_row(self.row, start=self.col, stop=self.col+n)
 
     @control('Z')
     def CBT(self, command=None, param=None):
