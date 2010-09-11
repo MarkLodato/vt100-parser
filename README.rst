@@ -44,7 +44,7 @@ Unimplemented Features
 
 This module is designed to mimic the output (and only output) of xterm.
 Therefore, there are no plans to implement any sequence that affects input,
-cause the terminal to respond, or that xterm does not itself implement.
+causes the terminal to respond, or that xterm does not itself implement.
 
 
 OPTIONS
