@@ -62,7 +62,7 @@ OPTIONS
 REQUIREMENTS
 ============
 
-* Python 2.6
+* Python 2.6 or 2.7
 
 
 TODO
