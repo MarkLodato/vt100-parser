@@ -49,7 +49,7 @@ def compare_output(command, out_filename):
 def test(test_name, fmt):
     out_filename = '%s.%s' % (test_name, fmt)
     if os.path.exists(out_filename):
-        command = [PROG, test_name + IN_EXT, '-f', fmt]
+        command = [sys.executable, PROG, test_name + IN_EXT, '-f', fmt]
         return compare_output(command, out_filename)
 
 def test_all(tests):
