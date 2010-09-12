@@ -8,6 +8,7 @@ Version 0.3 - ????-??-??
     * IRM (Insertion Replacement Mode)
     * LNM (Line Feed/New Line Mode)
     * DECAWM (Auto Wrap Mode)
+    * reverse auto-wrap mode
     * alternate screen buffer
 - Remove needless verbosity for some unimplemented commands.
 - Fix a few bugs.

@@ -18,7 +18,7 @@ Testing
 Commands To Implement
 =====================
 
-* Modes: DECCOLM, DECSCNM, DECOM, reverse wraparound
+* Modes: DECCOLM, DECSCNM, DECOM
 * Selective erase: DECSEL, DECSED
 * DEC Rectangular Area: CECCARA, DECRARA
 * save/restore DEC private modes

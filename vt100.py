@@ -389,6 +389,7 @@ class Terminal:
         self.insert_mode = False
         self.new_line_mode = False
         self.autowrap_mode = True
+        self.reverse_wrap = False
         self.clear()
 
     default_cursor = {
@@ -615,7 +616,14 @@ class Terminal:
     def BS(self, c=None):
         """Backspace"""
         self.clip_column()
-        self.col -= 1  if self.col > 0 else 0
+        if self.col > 0:
+            self.col -= 1
+        elif self.reverse_wrap:
+            self.col = self.width - 1
+            if self.row > 0:
+                self.row -= 1
+            else:
+                self.row = self.height - 1
 
     @command('\x09')        # ^I
     def HT(self, c=None):
@@ -1419,7 +1427,10 @@ class Terminal:
     @dec_mode(45)
     def reverse_wraparound_mode(self, value):
         """Reverse-wraparound mode"""
-        return NotImplemented
+        if value is None:
+            return self.reverse_wrap
+        else:
+            self.reverse_wrap = value
 
     @dec_mode(47)
     @dec_mode(1047)
