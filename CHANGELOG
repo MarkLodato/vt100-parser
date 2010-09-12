@@ -5,6 +5,7 @@ Version 0.3 - ????-??-??
 - Implement scrolling region (DECSTBM).
 - Implement soft terminal reset (DECSTR).
 - Add support for modes.
+    * IRM (Insertion Replacement Mode)
     * alternate screen buffer
 - Remove needless verbosity for some unimplemented commands.
 - Fix a few bugs.

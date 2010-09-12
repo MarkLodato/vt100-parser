@@ -386,6 +386,7 @@ class Terminal:
         self.current = '\0'
         self.tabstops = [(i%8)==0 for i in range(self.width)]
         self.attr = {}
+        self.insert_mode = False
         self.clear()
 
     default_cursor = {
@@ -426,6 +427,8 @@ class Terminal:
         if self.col >= self.width:
             self.NEL()
         c = Character(c, self.attr.copy())
+        if self.insert_mode:
+            self.screen.shift_row(self.row, self.col)
         self.screen[self.pos] = c
         self.col += 1
 
@@ -1369,7 +1372,10 @@ class Terminal:
     @ansi_mode(4)
     def IRM(self, value):
         """Insertion Replacement Mode"""
-        return NotImplemented
+        if value is None:
+            return self.insert_mode
+        else:
+            self.insert_mode = value
 
     @ansi_mode(20)
     def LNM(self, value):
