@@ -4,6 +4,8 @@ Run all of the t????-*.in tests in the current directory and compare with the
 expected output.
 """
 
+from __future__ import print_function
+
 import sys, os
 import glob
 import difflib
@@ -22,15 +24,15 @@ def compare_output(command, out_filename):
         expected = slurp(out_filename)
     except IOError as e:
         if e.errno == 2:
-            print >>sys.stderr, "%s not found" % out_filename
+            print("%s not found" % out_filename, file=sys.stderr)
             return False
         else:
             raise
     p = Popen(command, stdout=PIPE, stderr=PIPE)
     output, stderr = p.communicate()
     if p.returncode != 0 or stderr:
-        print "program returned %d:" % p.returncode
-        print '\x1b[33m%s\x1b[m' % stderr,
+        print("program returned %d:" % p.returncode)
+        print('\x1b[33m%s\x1b[m' % stderr, end='')
         return False
     elif output == expected:
         return True
@@ -39,16 +41,16 @@ def compare_output(command, out_filename):
                 fromfile=out_filename, tofile=' '.join(command), lineterm='')
         for line in lines:
             if line[0] == '+':
-                print '\x1b[32m' + line[1:] + '\x1b[0m'
+                print('\x1b[32m' + line[1:] + '\x1b[0m')
             elif line[0] == '-':
-                print '\x1b[31m' + line[1:] + '\x1b[0m'
+                print('\x1b[31m' + line[1:] + '\x1b[0m')
             elif line[0] == '@':
-                print '\x1b[36m' + line + '\x1b[0m'
+                print('\x1b[36m' + line + '\x1b[0m')
             elif line[0] == ' ':
-                print line[1:]
+                print(line[1:])
             else:
-                print line
-        print '\n'.join(lines)
+                print(line)
+        print('\n'.join(lines))
         return False
 
 def test(test_name, fmt):
@@ -68,7 +70,7 @@ def test_all(tests):
             if r is None: continue
             results.append((testname, r))
             msg = ' \x1b[32mOK\x1b[0m ' if r else '\x1b[31mFAIL\x1b[0m'
-            print '%-60s [%s]' % (testname, msg)
+            print('%-60s [%s]' % (testname, msg))
 
     return results
 
