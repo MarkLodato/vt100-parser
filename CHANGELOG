@@ -1,10 +1,12 @@
 Version 0.3 - ????-??-??
-- Remove dependence on Numpy.
-- Add Python 3 compatibility.
-- Implement cursor save/restore (DECSC, DECRC, CSI s, CSI u).
-- Implement scrolling region (DECSTBM).
-- Implement soft terminal reset (DECSTR).
-- Add support for modes.
+- Increase Python compatibility:
+    * Remove dependence on Numpy.
+    * Add Python 3 compatibility.
+- Imlement the following sequences:
+    * Cursor save/restore (DECSC, DECRC, CSI s, CSI u).
+    * Scrolling region (DECSTBM).
+    * Soft terminal reset (DECSTR).
+- Add support for modes, and implement the following:
     * IRM (Insertion Replacement Mode)
     * LNM (Line Feed/New Line Mode)
     * DECAWM (Auto Wrap Mode)
