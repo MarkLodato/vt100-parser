@@ -20,7 +20,7 @@ Commands To Implement
 
 * Modes: DECCOLM, DECSCNM, DECOM
 * Selective erase: DECSEL, DECSED
-* DEC Rectangular Area: CECCARA, DECRARA
+* DEC Rectangular Area: DECCARA, DECRARA
 * save/restore DEC private modes
 * OSC command to configure the 256 xterm colors.
 * Alternate fonts / character sets?
