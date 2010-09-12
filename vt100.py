@@ -63,7 +63,7 @@ OPTIONS
 REQUIREMENTS
 ============
 
-* Python 2.6 or 2.7
+* Python 2.6+ or 3.0+ (tested on 2.6, 2.7, 3.0, and 3.1)
 
 
 TODO
@@ -133,7 +133,10 @@ import sys
 from optparse import OptionParser
 
 
-__metaclass__ = type
+if sys.version_info[0] == 2:
+    __metaclass__ = type
+    map = itertools.imap
+    range = xrange
 
 
 def format_text(line, eol='\n'):
@@ -164,7 +167,7 @@ html_default = {
 
 def apply_attr_map(attr, mapping):
     out = {}
-    for key,value in attr.iteritems():
+    for key,value in attr.items():
         try:
             mapping_value = mapping[key]
         except KeyError:
@@ -172,7 +175,7 @@ def apply_attr_map(attr, mapping):
             print('unknown attribute: %s' % key, f=sys.stderr)
             continue
         key, v_mapping = mapping_value
-        if isinstance(v_mapping, basestring):
+        if isinstance(v_mapping, str):
             value = v_mapping
         elif v_mapping is not None:
             try:
@@ -267,7 +270,7 @@ def clip(n, start, stop=None):
 
 def new_sequence_decorator(dictionary):
     def decorator_generator(key):
-        assert isinstance(key, (basestring, int))
+        assert isinstance(key, (str, int))
         def decorator(f, key=key):
             dictionary[key] = f.__name__
             return f
@@ -307,7 +310,7 @@ class Screen:
         if stop is None or stop > self.width:
             stop = self.width
         row = self.rows[row]
-        for c in xrange(start, stop):
+        for c in range(start, stop):
             row[c] = None
 
     def clear_rows(self, start=0, stop=None):
@@ -316,7 +319,7 @@ class Screen:
             start = 0
         if stop is None or stop > self.height:
             stop = self.height
-        for r in xrange(start, stop):
+        for r in range(start, stop):
             self.rows[r] = [None] * self.width
 
     def shift_row(self, row, col, amount=1, fill=None):
@@ -525,9 +528,9 @@ class Terminal:
         # Concatenate the history and the screen, and fix each line.
         lines = []
         if history:
-            lines.extend(itertools.imap(self.fixup_line, self.history))
+            lines.extend(map(self.fixup_line, self.history))
         if screen:
-            lines.extend(itertools.imap(self.fixup_line, self.main_screen))
+            lines.extend(map(self.fixup_line, self.main_screen))
         if not lines:
             return
 
@@ -553,7 +556,7 @@ class Terminal:
                 return Character(' ')
         def is_None(x):
             return x is None
-        return map(convert_to_blank, self.drop_end(is_None, line))
+        return list(map(convert_to_blank, self.drop_end(is_None, line)))
 
     @staticmethod
     def drop_end(predicate, sequence):

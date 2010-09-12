@@ -1,5 +1,6 @@
 Version 0.3 - ????-??-??
 - Remove dependence on Numpy.
+- Add Python 3 compatibility.
 - Implement cursor save/restore (DECSC, DECRC, CSI s, CSI u).
 - Implement scrolling region (DECSTBM).
 - Implement soft terminal reset (DECSTR).

@@ -62,7 +62,7 @@ OPTIONS
 REQUIREMENTS
 ============
 
-* Python 2.6 or 2.7
+* Python 2.6+ or 3.0+ (tested on 2.6, 2.7, 3.0, and 3.1)
 
 
 TODO
