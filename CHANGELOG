@@ -1,4 +1,4 @@
-Version 0.3 - ????-??-??
+Version 0.3 - 2010-09-12
 - Increase Python compatibility:
     * Remove dependence on Numpy.
     * Add Python 3 compatibility.
