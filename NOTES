@@ -1,0 +1,10 @@
+Differences from xterm
+======================
+
+DECAWM
+------
+
+In xterm (version 256, at least), characters written at the end of the line
+when DECAWM is reset do *not* overwrite the last character.  In
+gnome-terminal, they do.  The latter seems to be correct, so that is what
+is implemented.

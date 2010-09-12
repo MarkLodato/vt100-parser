@@ -388,6 +388,7 @@ class Terminal:
         self.attr = {}
         self.insert_mode = False
         self.new_line_mode = False
+        self.autowrap_mode = True
         self.clear()
 
     default_cursor = {
@@ -426,7 +427,10 @@ class Terminal:
         cursor to the next position.  If the current position is past the end
         of the line, starts a new line."""
         if self.col >= self.width:
-            self.NEL()
+            if self.autowrap_mode:
+                self.NEL()
+            else:
+                self.col = self.width - 1
         c = Character(c, self.attr.copy())
         if self.insert_mode:
             self.screen.shift_row(self.row, self.col)
@@ -1407,7 +1411,10 @@ class Terminal:
     @dec_mode(7)
     def DECAWM(self, value):
         """Auto Wrap Mode"""
-        return NotImplemented
+        if value is None:
+            return self.autowrap_mode
+        else:
+            self.autowrap_mode = value
 
     @dec_mode(45)
     def reverse_wraparound_mode(self, value):

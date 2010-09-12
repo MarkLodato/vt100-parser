@@ -7,6 +7,7 @@ Version 0.3 - ????-??-??
 - Add support for modes.
     * IRM (Insertion Replacement Mode)
     * LNM (Line Feed/New Line Mode)
+    * DECAWM (Auto Wrap Mode)
     * alternate screen buffer
 - Remove needless verbosity for some unimplemented commands.
 - Fix a few bugs.
