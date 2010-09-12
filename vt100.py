@@ -387,6 +387,7 @@ class Terminal:
         self.tabstops = [(i%8)==0 for i in range(self.width)]
         self.attr = {}
         self.insert_mode = False
+        self.new_line_mode = False
         self.clear()
 
     default_cursor = {
@@ -623,7 +624,10 @@ class Terminal:
     @command('\x0a')        # ^J
     def LF(self, c=None):
         """Line Feed"""
-        self.IND()
+        if self.new_line_mode:
+            self.NEL()
+        else:
+            self.IND()
 
     @command('\x0b')        # ^K
     def VT(self, c=None):
@@ -1380,7 +1384,10 @@ class Terminal:
     @ansi_mode(20)
     def LNM(self, value):
         """Line Feed/New Line Mode"""
-        return NotImplemented
+        if value is None:
+            return self.new_line_mode
+        else:
+            self.new_line_mode = value
 
     @dec_mode(3)
     def DECCOLM(self, value):

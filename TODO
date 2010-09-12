@@ -18,7 +18,7 @@ Testing
 Commands To Implement
 =====================
 
-* Modes: LNM, DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound
+* Modes: DECCOLM, DECSCNM, DECOM, DECAWM, reverse wraparound
 * Selective erase: DECSEL, DECSED
 * DEC Rectangular Area: CECCARA, DECRARA
 * OSC command to configure the 256 xterm colors.
