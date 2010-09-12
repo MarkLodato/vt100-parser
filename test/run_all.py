@@ -34,15 +34,15 @@ def compare_output(command, out_filename):
                 fromfile=out_filename, tofile=' '.join(command), lineterm='')
         for line in lines:
             if line[0] == '+':
-                print('\x1b[32m' + line[1:] + '\x1b[0m')
+                print '\x1b[32m' + line[1:] + '\x1b[0m'
             elif line[0] == '-':
-                print('\x1b[31m' + line[1:] + '\x1b[0m')
+                print '\x1b[31m' + line[1:] + '\x1b[0m'
             elif line[0] == '@':
-                print('\x1b[36m' + line + '\x1b[0m')
+                print '\x1b[36m' + line + '\x1b[0m'
             elif line[0] == ' ':
-                print(line[1:])
+                print line[1:]
             else:
-                print(line)
+                print line
         print '\n'.join(lines)
         return False
 
