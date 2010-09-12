@@ -2221,8 +2221,9 @@ if __name__ == "__main__":
     script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
             r'\d\d:\d\d:\d\d \w+ \w+$')
     for line in f:
-        if not options.non_script and script_re.match(line):
-            continue
+        if not options.non_script and line.startswith(b'Script '):
+            if script_re.match(line.decode('ascii')):
+                continue
         t.parse(line)
     print(pre, t.to_string(), post, sep='', end='')
     if filename != '-':

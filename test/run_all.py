@@ -17,7 +17,7 @@ FORMATS = ['text', 'html']
 
 def slurp(filename):
     with open(filename, 'rb') as f:
-        return f.read()
+        return f.read().decode('ascii')
 
 def compare_output(command, out_filename):
     try:
@@ -30,6 +30,8 @@ def compare_output(command, out_filename):
             raise
     p = Popen(command, stdout=PIPE, stderr=PIPE)
     output, stderr = p.communicate()
+    output = output.decode('ascii')
+    stderr = stderr.decode('utf-8')
     if p.returncode != 0 or stderr:
         print("program returned %d:" % p.returncode)
         print('\x1b[33m%s\x1b[m' % stderr, end='')
