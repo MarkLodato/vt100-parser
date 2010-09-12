@@ -101,7 +101,7 @@ DEC-compatible parser page.
 # Requires Python 2.6
 from __future__ import print_function
 
-__version__ = "0.3"
+__version__ = "0.4-git"
 __author__ = "Mark Lodato"
 
 __license__ = """
