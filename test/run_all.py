@@ -26,8 +26,13 @@ def compare_output(command, out_filename):
             return False
         else:
             raise
-    output = Popen(command, stdout=PIPE).communicate()[0]
-    if output == expected:
+    p = Popen(command, stdout=PIPE, stderr=PIPE)
+    output, stderr = p.communicate()
+    if p.returncode != 0 or stderr:
+        print "program returned %d:" % p.returncode
+        print '\x1b[33m%s\x1b[m' % stderr,
+        return False
+    elif output == expected:
         return True
     else:
         lines = difflib.unified_diff(expected.split('\n'), output.split('\n'),
