@@ -9,7 +9,7 @@ vt100.py - Parse a typescript and output text.
 SYNOPSIS
 ========
 
-``vt100.py [-q|-v] [-f FORMAT] [--non-script] (filename|-)``
+``vt100.py [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)``
 
 
 DESCRIPTION
@@ -55,6 +55,7 @@ OPTIONS
 --man                       print manual page and exit
 --version                   print version number and exit
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
+-g WxH, --geometry=WxH      use W columns and H rows in output
 --non-script                do not ignore "Script (started|done) on" lines
 -q, --quiet                 decrease debugging verbosity
 -v, --verbose               increase debugging verbosity
@@ -2221,9 +2222,16 @@ class Terminal:
         return NotImplemented
 
 
+def parse_geometry(s):
+    """Parse a WxH geometry string."""
+    cols, rows = s.split('x')
+    cols = int(cols.strip())
+    rows = int(rows.strip())
+    return rows, cols
+
 
 if __name__ == "__main__":
-    usage = "%prog [-q|-v] [-f FORMAT] [--non-script] (filename|-)"
+    usage = "%prog [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)"
     version = "%%prog %s" % __version__
     parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
@@ -2231,6 +2239,8 @@ if __name__ == "__main__":
     parser.add_option('-f', '--format', default='text',
             choices=('text','html'),
             help='output format.  Choices: text (default), html')
+    parser.add_option('-g', '--geometry', metavar='WxH', default='80x24',
+            help='use W columns and H rows in output (default %default)')
     parser.add_option('--non-script', action='store_true', default=False,
             help='do not ignore "Script (started|done) on <date>" lines')
     parser.add_option('-q', '--quiet', action='count', default=0,
@@ -2251,7 +2261,12 @@ if __name__ == "__main__":
     else:
         f = open(filename, 'rb')
     pre, format_line, post = formatters[options.format]
-    t = Terminal(verbosity=options.verbose, format_line=format_line)
+    try:
+        rows, cols = parse_geometry(options.geometry)
+    except:
+        parser.error('invalid format for --geometry: %s' % options.geometry)
+    t = Terminal(verbosity=options.verbose, format_line=format_line,
+                 width=cols, height=rows)
     script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
             r'\d\d:\d\d:\d\d \w+ \w+$')
     for line in f:

@@ -1,4 +1,5 @@
 Version 0.4 - ????-??-??
+- Add --geometry option.
 
 Version 0.3 - 2010-09-12
 - Increase Python compatibility:
