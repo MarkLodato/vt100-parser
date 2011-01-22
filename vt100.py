@@ -2222,6 +2222,29 @@ class Terminal:
         return NotImplemented
 
 
+def remove_script_lines(text):
+    """Remove the starting and ending lines produced by script(1)."""
+    script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
+            r'\d\d:\d\d:\d\d \w+ \w+$')
+    try:
+        first_newline = text.index(b'\n')
+        first_line = text[:first_newline].decode('ascii')
+    except (ValueError, UnicodeDecodeError):
+        pass
+    else:
+        if script_re.match(first_line):
+            text = text[first_newline+1:]
+    try:
+        last_newline = text.rstrip().rindex(b'\n')
+        last_line = text[last_newline+1:].decode('ascii')
+    except (ValueError, UnicodeDecodeError):
+        pass
+    else:
+        if script_re.match(last_line):
+            text = text[:last_newline]
+    return text
+
+
 def parse_geometry(s):
     """Parse a WxH geometry string."""
     cols, rows = s.split('x')
@@ -2267,13 +2290,10 @@ if __name__ == "__main__":
         parser.error('invalid format for --geometry: %s' % options.geometry)
     t = Terminal(verbosity=options.verbose, format_line=format_line,
                  width=cols, height=rows)
-    script_re = re.compile(r'^Script (started|done) on \w+ \d+ \w+ \d{4} '
-            r'\d\d:\d\d:\d\d \w+ \w+$')
-    for line in f:
-        if not options.non_script and line.startswith(b'Script '):
-            if script_re.match(line.decode('ascii')):
-                continue
-        t.parse(line)
+    text = f.read()
+    if not options.non_script:
+        text = remove_script_lines(text)
+    t.parse(text)
     print(pre, t.to_string(), post, sep='', end='')
     if filename != '-':
         f.close()
