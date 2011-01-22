@@ -2227,7 +2227,7 @@ if __name__ == "__main__":
     version = "%%prog %s" % __version__
     parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
-            help='print the manual page and exit.')
+            help='print the manual page and exit')
     parser.add_option('-f', '--format', default='text',
             choices=('text','html'),
             help='output format.  Choices: text (default), html')
