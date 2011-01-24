@@ -8,3 +8,20 @@ In xterm (version 256, at least), characters written at the end of the line
 when DECAWM is reset do *not* overwrite the last character.  In
 gnome-terminal, they do.  The latter seems to be correct, so that is what
 is implemented.
+
+CBT
+---
+
+Xterm handles CBT when the cursor is past the end of the line in a very
+strange manner: If CBT is followed by an output character, the output goes on
+the next line as though no CBT occurred.  However, if CBT is followed by
+something like RI that "clips" the cursor and then an output character, the
+CBT behaves like normal.  Also, xterm's CBT ignores a tab stop that is set in
+the rightmost column when the cursor is past the end of the line
+
+Gnome-terminal implements what seems more sane: the cursor is one past the
+rightmost column, and a tab stop in the rightmost column is honored.  However,
+gnome-terminal ignores the argument to CBT.
+
+We choose to implement gnome-terminal's end-of-line behavior but also
+honor the argument to CBT.

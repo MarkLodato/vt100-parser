@@ -743,7 +743,8 @@ class Terminal:
     @escape('H')
     def HTS(self, c=None):
         """Horizontal Tab Set"""
-        self.tabstops[self.col] = True
+        if self.col < self.width:
+            self.tabstops[self.col] = True
 
     @escape('M')
     def RI(self, c=None):
@@ -1077,7 +1078,8 @@ class Terminal:
         """Tab Clear"""
         n = param_list(param, 0)[0]
         if n == 0:
-            self.tabstops[self.col] = False
+            if self.col < self.width:
+                self.tabstops[self.col] = False
         elif n == 3:
             self.tabstops[:] = [False] * self.width
 

@@ -6,7 +6,6 @@ Testing
 * 40-49: RIS, DECSTR (how does this affect alternate screen buffer?)
 * 50-59: DECSEL, DECSED
 * 60-69: DECSC with attributes, modes, etc.
-* 70-79: HT, HTS, CHT, CBT, TBC
 * 90-99: alternate screen buffer
 * 100-109: modes
 * 200+: SGR
