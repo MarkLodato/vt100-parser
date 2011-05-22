@@ -1,7 +1,9 @@
+PYTHON = python
+
 README.rst : vt100.py
-	python $^ --man > $@
+	$(PYTHON) $^ --man > $@
 
 test :
-	cd test && ./run_all.py
+	cd test && $(PYTHON) ./run_all.py
 
 .PHONY : test
