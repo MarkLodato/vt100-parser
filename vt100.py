@@ -2329,7 +2329,7 @@ class SimpleConfigParser (ConfigParser):
         return self.get(self.NOSECTION, option)
 
 
-if __name__ == "__main__":
+def main():
 
     usage = "%prog [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)"
     version = "%%prog %s" % __version__
@@ -2354,7 +2354,7 @@ if __name__ == "__main__":
 
     if options.man:
         print(globals()['__doc__'])
-        sys.exit(0)
+        return 0
 
     defaults = {
             'format' : 'text',
@@ -2399,3 +2399,7 @@ if __name__ == "__main__":
         text = remove_script_lines(text)
     t.parse(text)
     print(pre, t.to_string(), post, sep='', end='')
+
+
+if __name__ == "__main__":
+    sys.exit(main())
