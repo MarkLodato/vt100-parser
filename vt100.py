@@ -212,7 +212,7 @@ def apply_attr_map(attr, mapping):
             mapping_value = mapping[key]
         except KeyError:
             # TODO verbose option?
-            print('unknown attribute: %s' % key, f=sys.stderr)
+            print('unknown attribute: %s' % key, file=sys.stderr)
             continue
         key, v_mapping = mapping_value
         if isinstance(v_mapping, str):
@@ -223,7 +223,7 @@ def apply_attr_map(attr, mapping):
             except KeyError:
                 # TODO verbose option?
                 # TODO save original key value
-                print('unknown value: %s:%s' % (key, value), f=sys.stderr)
+                print('unknown value: %s:%s' % (key, value), file=sys.stderr)
                 continue
         out.setdefault(key, set()).add(value)
     return out
