@@ -55,7 +55,7 @@ OPTIONS
 --man                       print manual page and exit
 --version                   print version number and exit
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
--g WxH, --geometry=WxH      use W columns and H rows in output
+-g WxH, --geometry=WxH      specify console geometry (see "Configuration")
 --non-script                do not ignore "Script (started|done) on" lines
 --rc=FILE                   read default options from FILE (default ~/.vt100rc)
 --no-rc                     suppress reading of rc file
@@ -71,8 +71,10 @@ By default, vt100.py reads ~/.vt100rc for the following 'key = value` pairs.
 format = {text, html}
     Default output format.  Default is 'text'.
 
-geometry = WxH
-    Same as ``--geometry=WxH``.  Default is '80x24'.
+geometry = {WxH, detect}
+    Use W columns and H rows in output.  If the value 'detect' is given, the
+    current terminal's geometry is detected using ``stty size``.
+    Default is '80x24'.
 
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
@@ -155,6 +157,7 @@ import collections
 import itertools
 import os.path
 import re
+import subprocess
 import sys
 from optparse import OptionParser
 try:
@@ -2283,6 +2286,15 @@ def remove_script_lines(text):
     return text
 
 
+def detect_geometry():
+    """Determine the console geometry from the current console."""
+    # This is not very portable, but works on Linux and is easy!
+    p = subprocess.Popen(['stty', 'size'], stdout=subprocess.PIPE)
+    stdout = p.communicate()[0]
+    rows, cols = map(int, stdout.split())
+    return rows, cols
+
+
 def parse_geometry(s):
     """Parse a WxH geometry string."""
     cols, rows = s.split('x')
@@ -2327,7 +2339,7 @@ if __name__ == "__main__":
     parser.add_option('-f', '--format', choices=('text','html'),
             help='output format.  Choices: text, html')
     parser.add_option('-g', '--geometry', metavar='WxH',
-            help='use W columns and H rows in output')
+            help='use W columns and H rows in output, or "detect"')
     parser.add_option('--non-script', action='store_true', default=False,
             help='do not ignore "Script (started|done) on <date>" lines')
     parser.add_option('--rc', metavar='FILE', default='~/.vt100rc',
@@ -2373,10 +2385,13 @@ if __name__ == "__main__":
 
     if options.geometry is None:
         options.geometry = config.getoption('geometry')
-    try:
-        rows, cols = parse_geometry(options.geometry)
-    except:
-        parser.error('invalid format for --geometry: %s' % options.geometry)
+    if options.geometry == 'detect':
+        rows, cols = detect_geometry()
+    else:
+        try:
+            rows, cols = parse_geometry(options.geometry)
+        except:
+            parser.error('invalid format for --geometry: %s' % options.geometry)
 
     t = Terminal(verbosity=options.verbose, format_line=format_line,
                  width=cols, height=rows)

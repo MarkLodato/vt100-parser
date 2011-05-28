@@ -54,7 +54,7 @@ OPTIONS
 --man                       print manual page and exit
 --version                   print version number and exit
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
--g WxH, --geometry=WxH      use W columns and H rows in output
+-g WxH, --geometry=WxH      specify console geometry (see "Configuration")
 --non-script                do not ignore "Script (started|done) on" lines
 --rc=FILE                   read default options from FILE (default ~/.vt100rc)
 --no-rc                     suppress reading of rc file
@@ -70,8 +70,10 @@ By default, vt100.py reads ~/.vt100rc for the following 'key = value` pairs.
 format = {text, html}
     Default output format.  Default is 'text'.
 
-geometry = WxH
-    Same as ``--geometry=WxH``.  Default is '80x24'.
+geometry = {WxH, detect}
+    Use W columns and H rows in output.  If the value 'detect' is given, the
+    current terminal's geometry is detected using ``stty size``.
+    Default is '80x24'.
 
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
