@@ -56,8 +56,8 @@ OPTIONS
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
 -g WxH, --geometry=WxH      specify console geometry (see "Configuration")
 --non-script                do not ignore "Script (started|done) on" lines
---rc=FILE                   read default options from FILE (default ~/.vt100rc)
---no-rc                     suppress reading of rc file
+--rc=FILE                   read configuration from FILE (default ~/.vt100rc)
+--no-rc                     suppress reading of configuration file
 -q, --quiet                 decrease debugging verbosity
 -v, --verbose               increase debugging verbosity
 
