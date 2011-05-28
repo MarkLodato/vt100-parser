@@ -179,84 +179,115 @@ if sys.version_info[0] == 2:
     range = xrange
 
 
-def format_text(line, eol='\n'):
-    return ''.join(x.char for x in line) + eol
+class TextFormatter:
+    """Terminal formatter for plain text output."""
+
+    def __init__(self, eol='\n'):
+        self.eol = eol
+        self.init()
+
+    def init(self):
+        """Initialize any default instance variables."""
+        pass
+
+    def format(self, lines):
+        """Return a stringification of the given lines."""
+        out = []
+        out.extend(self.begin())
+        out.extend(self.format_line(line) for line in lines)
+        out.extend(self.end())
+        out.append('')
+        return self.eol.join(out)
+
+    def begin(self):
+        """Return a list of lines to be output before the formatted lines."""
+        return []
+
+    def format_line(self, line):
+        """Return the given line (sequence of Characters) formatted as
+        a string (without an EOL character)."""
+        return ''.join(x.char for x in line)
+
+    def end(self):
+        """Return a list of lines to be output after the formatted lines."""
+        return []
 
 
-html_attr_map = {
-        'fg_color'  : ('color', None),
-        'bg_color'  : ('background-color', None),
-        'weight'    : ('font-weight', {'bold':'bold', 'feint':'lighter'}),
-        'underline' : ('text-decoration', 'underline'), # TODO double
-        'style'     : ('font-style', {'italic':'italic'}),
-        'blink'     : ('text-decoration', 'blink'), # no fast or slow
-        'hidden'    : ('display', 'hidden'),
-        'strikeout' : ('text-decoration', 'line-through'),
-        'overline'  : ('text-decoration', 'overlie'),
-        # TODO frame
-        }
+class HtmlFormatter (TextFormatter):
+    """Terminal formatter for HTML output."""
 
-html_default = {
-        'color' : set(),
-        'background-color' : set(),
-        'font-weight' : set(),
-        'font-style' : set(),
-        'text-decoration' : set(),
-        'display' : set(),
-        }
+    attr_map = {
+            'fg_color'  : ('color', None),
+            'bg_color'  : ('background-color', None),
+            'weight'    : ('font-weight', {'bold':'bold', 'feint':'lighter'}),
+            'underline' : ('text-decoration', 'underline'), # TODO double
+            'style'     : ('font-style', {'italic':'italic'}),
+            'blink'     : ('text-decoration', 'blink'), # no fast or slow
+            'hidden'    : ('display', 'hidden'),
+            'strikeout' : ('text-decoration', 'line-through'),
+            'overline'  : ('text-decoration', 'overlie'),
+            # TODO frame
+            }
 
-def apply_attr_map(attr, mapping):
-    out = {}
-    for key,value in attr.items():
-        try:
-            mapping_value = mapping[key]
-        except KeyError:
-            # TODO verbose option?
-            print('unknown attribute: %s' % key, file=sys.stderr)
-            continue
-        key, v_mapping = mapping_value
-        if isinstance(v_mapping, str):
-            value = v_mapping
-        elif v_mapping is not None:
+    def _apply_attr_map(self, attr):
+        out = {}
+        for key,value in attr.items():
             try:
-                value = v_mapping[value]
+                mapping_value = self.attr_map[key]
             except KeyError:
                 # TODO verbose option?
-                # TODO save original key value
-                print('unknown value: %s:%s' % (key, value), file=sys.stderr)
+                print('unknown attribute: %s' % key, file=sys.stderr)
                 continue
-        out.setdefault(key, set()).add(value)
-    return out
+            key, v_mapping = mapping_value
+            if isinstance(v_mapping, str):
+                value = v_mapping
+            elif v_mapping is not None:
+                try:
+                    value = v_mapping[value]
+                except KeyError:
+                    # TODO verbose option?
+                    # TODO save original key value
+                    print('unknown value: %s:%s' % (key, value),
+                            file=sys.stderr)
+                    continue
+            out.setdefault(key, set()).add(value)
+        return out
 
+    def _format_attr(self, attr):
+        # TODO implement inverse
+        mapped_attr = self._apply_attr_map(attr)
+        return '; '.join(
+                "%s: %s" % (k, ' '.join(sorted(mapped_attr[k])))
+                for k in sorted(mapped_attr.keys())
+                )
 
-def format_html_attr(attr):
-    # TODO implement inverse
-    mapped_attr = apply_attr_map(attr, html_attr_map)
-    return '; '.join(
-            "%s: %s" % (k, ' '.join(sorted(mapped_attr[k])))
-            for k in sorted(mapped_attr.keys())
-            )
+    def begin(self):
+        return ['<pre>']
 
-def format_html(line, eol='\n'):
-    out = []
-    last_style = ''
-    for c in line:
-        style = format_html_attr(c.attr)
-        if style != last_style:
-            if last_style:
-                out.append('</span>')
-            if style:
-                out.append('<span style="%s">' % style)
-            last_style = style
-        out.append(c.char)
-    if last_style:
-        out.append('</span>')
-    out.append(eol)
-    return ''.join(out)
+    def format_line(self, line):
+        out = []
+        last_style = ''
+        for c in line:
+            style = self._format_attr(c.attr)
+            if style != last_style:
+                if last_style:
+                    out.append('</span>')
+                if style:
+                    out.append('<span style="%s">' % style)
+                last_style = style
+            out.append(c.char)
+        if last_style:
+            out.append('</span>')
+        out.append(self.eol)
+        return ''.join(out)
+
+    def end(self):
+        return ['</pre>']
+
 
 formatters = {
-        'text' : ('', format_text, ''),
-        'html' : ('<pre>\n', format_html, '</pre>\n'),
+        'text' : TextFormatter,
+        'html' : HtmlFormatter,
         }
 
 
@@ -397,11 +428,11 @@ class Terminal:
     # ---------- Constructor ----------
 
     def __init__(self, height=24, width=80, verbosity=False,
-            format_line = format_text):
+            formatter=TextFormatter()):
         self.verbosity = verbosity
         self.width = width
         self.height = height
-        self.format_line = format_line
+        self.formatter = formatter
         self.main_screen = Screen(width, height)
         self.alt_screen = Screen(width, height)
         self.reset()
@@ -571,7 +602,7 @@ class Terminal:
     # ---------- Output ----------
 
     def to_string(self, history=True, screen=True, remove_blank_end=True,
-            format_line=None):
+            formatter=None):
         """Return a string form of the history and the current screen."""
 
         # Concatenate the history and the screen, and fix each line.
@@ -587,13 +618,13 @@ class Terminal:
         if remove_blank_end:
             lines = self.drop_end(None, list(lines))
 
-        if format_line is None:
-            format_line = self.format_line
-        return ''.join(format_line(line) for line in lines)
+        if formatter is None:
+            formatter = self.formatter
+        return formatter.format(lines)
 
-    def print_screen(self, format_line=None):
+    def print_screen(self, formatter=None):
         """Print the state of the current screen to standard output."""
-        print(self.to_string(False, True, False, format_line), end='')
+        print(self.to_string(False, True, False, formatter), end='')
 
     def fixup_line(self, line):
         """Remove empty characters from the end of the line and change Nones
@@ -2385,7 +2416,7 @@ def main():
 
     if options.format is None:
         options.format = config.get(None, 'format')
-    pre, format_line, post = formatters[options.format]
+    formatter = formatters[options.format]()
 
     if options.geometry is None:
         options.geometry = config.get(None, 'geometry')
@@ -2397,12 +2428,12 @@ def main():
         except:
             parser.error('invalid format for --geometry: %s' % options.geometry)
 
-    t = Terminal(verbosity=options.verbose, format_line=format_line,
+    t = Terminal(verbosity=options.verbose, formatter=formatter,
                  width=cols, height=rows)
     if not options.non_script:
         text = remove_script_lines(text)
     t.parse(text)
-    print(pre, t.to_string(), post, sep='', end='')
+    print(t.to_string(), end='')
 
 
 if __name__ == "__main__":
