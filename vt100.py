@@ -2303,30 +2303,34 @@ def parse_geometry(s):
     return rows, cols
 
 
-class SimpleConfigParser (ConfigParser):
-    """
-    Configuration parser that allows section-less settings.
+class FileInserter:
+    """Helper for SimpleConfigParser"""
+    def __init__(self, fp, line):
+        self.fp = fp
+        self.line = line
+    def readline(self):
+        self.readline = self.fp.readline
+        return self.line
 
-    Based on SimpleConfigParser
-    Copyright 2010, Philippe Lagadec.  BSD License.
+
+class SimpleConfigParser (ConfigParser):
+    """Configuration parser that allows a default section if none is specified
+    in the configuration file.
+
+    Based on SimpleConfigParser, copyright 2010 Philippe Lagadec.
     """
-    NOSECTION = 'NOSECTION'
     def __init__(self, *args, **kwargs):
+        self.default_section = kwargs.pop('default_section', 'NOSECTION')
         ConfigParser.__init__(self, *args, **kwargs)
-        self.add_section(self.NOSECTION)
-    def read(self, filename, raise_on_error=True):
-        try:
-            with open(filename) as f:
-                text = f.read()
-        except IOError:
-            if raise_on_error:
-                raise
-            else:
-                return
-        f = StringIO('[%s]\n'%self.NOSECTION + text)
-        self.readfp(f, filename)
-    def getoption(self, option):
-        return self.get(self.NOSECTION, option)
+        self.add_section(self.default_section)
+    def _read(self, fp, fpname):
+        firstline = '[%s]\n' % self.default_section
+        fp = FileInserter(fp, firstline)
+        return ConfigParser._read(self, fp, fpname)
+    def get(self, section, *args, **kwargs):
+        if section is None:
+            section = self.default_section
+        return ConfigParser.get(self, section, *args, **kwargs)
 
 
 def main():
@@ -2364,10 +2368,10 @@ def main():
     config = SimpleConfigParser(defaults)
     if not options.no_rc:
         configfile = os.path.expanduser(options.rc)
-        config.read(configfile, raise_on_error=False)
+        config.read(configfile)
 
     options.verbose -= options.quiet
-    options.verbose += int(config.getoption('verbosity'))
+    options.verbose += config.getint(None, 'verbosity')
     del options.quiet
 
     if len(args) != 1:
@@ -2380,11 +2384,11 @@ def main():
             text = f.read()
 
     if options.format is None:
-        options.format = config.getoption('format')
+        options.format = config.get(None, 'format')
     pre, format_line, post = formatters[options.format]
 
     if options.geometry is None:
-        options.geometry = config.getoption('geometry')
+        options.geometry = config.get(None, 'geometry')
     if options.geometry == 'detect':
         rows, cols = detect_geometry()
     else:
