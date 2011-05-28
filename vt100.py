@@ -57,8 +57,26 @@ OPTIONS
 -f FORMAT, --format=FORMAT  specify output format (see "Output Formats")
 -g WxH, --geometry=WxH      use W columns and H rows in output
 --non-script                do not ignore "Script (started|done) on" lines
+--rc=FILE                   read default options from FILE (default ~/.vt100rc)
+--no-rc                     suppress reading of rc file
 -q, --quiet                 decrease debugging verbosity
 -v, --verbose               increase debugging verbosity
+
+
+CONFIGURATION
+=============
+
+By default, vt100.py reads ~/.vt100rc for the following 'key = value` pairs.
+
+format = {text, html}
+    Default output format.  Default is 'text'.
+
+geometry = WxH
+    Same as ``--geometry=WxH``.  Default is '80x24'.
+
+verbosity = INT
+    Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
+    negative, respectively.  Default is '0'.
 
 
 REQUIREMENTS
@@ -129,9 +147,21 @@ THE SOFTWARE.
 
 import collections
 import itertools
+import os.path
 import re
 import sys
 from optparse import OptionParser
+try:
+    from ConfigParser import SafeConfigParser as ConfigParser
+except ImportError:
+    from configparser import ConfigParser
+try:
+    from io import StringIO
+except ImportError:
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
 
 
 if sys.version_info[0] == 2:
@@ -2255,6 +2285,32 @@ def parse_geometry(s):
     return rows, cols
 
 
+class SimpleConfigParser (ConfigParser):
+    """
+    Configuration parser that allows section-less settings.
+
+    Based on SimpleConfigParser
+    Copyright 2010, Philippe Lagadec.  BSD License.
+    """
+    NOSECTION = 'NOSECTION'
+    def __init__(self, *args, **kwargs):
+        ConfigParser.__init__(self, *args, **kwargs)
+        self.add_section(self.NOSECTION)
+    def read(self, filename, raise_on_error=True):
+        try:
+            with open(filename) as f:
+                text = f.read()
+        except IOError:
+            if raise_on_error:
+                raise
+            else:
+                return
+        f = StringIO('[%s]\n'%self.NOSECTION + text)
+        self.readfp(f, filename)
+    def getoption(self, option):
+        return self.get(self.NOSECTION, option)
+
+
 if __name__ == "__main__":
 
     usage = "%prog [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)"
@@ -2262,13 +2318,16 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
             help='print the manual page and exit')
-    parser.add_option('-f', '--format', default='text',
-            choices=('text','html'),
-            help='output format.  Choices: text (default), html')
-    parser.add_option('-g', '--geometry', metavar='WxH', default='80x24',
-            help='use W columns and H rows in output (default %default)')
+    parser.add_option('-f', '--format', choices=('text','html'),
+            help='output format.  Choices: text, html')
+    parser.add_option('-g', '--geometry', metavar='WxH',
+            help='use W columns and H rows in output')
     parser.add_option('--non-script', action='store_true', default=False,
             help='do not ignore "Script (started|done) on <date>" lines')
+    parser.add_option('--rc', metavar='FILE', default='~/.vt100rc',
+            help='read default options from FILE (default %default)')
+    parser.add_option('--no-rc', action='store_true', default=False,
+            help='suppress reading of rc file')
     parser.add_option('-q', '--quiet', action='count', default=0,
             help='decrease debugging verbosity')
     parser.add_option('-v', '--verbose', action='count', default=0,
@@ -2279,7 +2338,18 @@ if __name__ == "__main__":
         print(globals()['__doc__'])
         sys.exit(0)
 
+    defaults = {
+            'format' : 'text',
+            'geometry' : '80x24',
+            'verbosity' : '0',
+            }
+    config = SimpleConfigParser(defaults)
+    if not options.no_rc:
+        configfile = os.path.expanduser(options.rc)
+        config.read(configfile, raise_on_error=False)
+
     options.verbose -= options.quiet
+    options.verbose += int(config.getoption('verbosity'))
     del options.quiet
 
     if len(args) != 1:
@@ -2291,8 +2361,12 @@ if __name__ == "__main__":
         with open(filename, 'rb') as f:
             text = f.read()
 
+    if options.format is None:
+        options.format = config.getoption('format')
     pre, format_line, post = formatters[options.format]
 
+    if options.geometry is None:
+        options.geometry = config.getoption('geometry')
     try:
         rows, cols = parse_geometry(options.geometry)
     except:
