@@ -2256,6 +2256,7 @@ def parse_geometry(s):
 
 
 if __name__ == "__main__":
+
     usage = "%prog [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)"
     version = "%%prog %s" % __version__
     parser = OptionParser(usage=usage, version=version)
@@ -2273,29 +2274,33 @@ if __name__ == "__main__":
     parser.add_option('-v', '--verbose', action='count', default=0,
             help='increase debugging verbosity')
     options, args = parser.parse_args()
+
     if options.man:
         print(globals()['__doc__'])
         sys.exit(0)
+
     options.verbose -= options.quiet
     del options.quiet
+
     if len(args) != 1:
         parser.error('missing required filename argument')
     filename, = args
     if filename == '-':
-        f = sys.stdin
+        text = sys.stdin.read()
     else:
-        f = open(filename, 'rb')
+        with open(filename, 'rb') as f:
+            text = f.read()
+
     pre, format_line, post = formatters[options.format]
+
     try:
         rows, cols = parse_geometry(options.geometry)
     except:
         parser.error('invalid format for --geometry: %s' % options.geometry)
+
     t = Terminal(verbosity=options.verbose, format_line=format_line,
                  width=cols, height=rows)
-    text = f.read()
     if not options.non_script:
         text = remove_script_lines(text)
     t.parse(text)
     print(pre, t.to_string(), post, sep='', end='')
-    if filename != '-':
-        f.close()
