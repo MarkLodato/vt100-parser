@@ -8,7 +8,7 @@ vt100.py - Parse a typescript and output text.
 SYNOPSIS
 ========
 
-``vt100.py [-q|-v] [-g WxH] [-f FORMAT] [--non-script] (filename|-)``
+``vt100.py [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)``
 
 
 DESCRIPTION
