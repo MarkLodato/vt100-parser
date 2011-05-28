@@ -104,6 +104,12 @@ A neat feature of *rawcat* is the ``-w`` option, which causes it to pause
 after each output byte so you can observe xterm draw the screen.
 
 
+SEE ALSO
+========
+
+script(1), scriptreplay(1)
+
+
 AUTHOR
 ======
 
