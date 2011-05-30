@@ -225,7 +225,7 @@ class HtmlFormatter (TextFormatter):
             'blink'     : ('text-decoration', 'blink'), # no fast or slow
             'hidden'    : ('display', 'hidden'),
             'strikeout' : ('text-decoration', 'line-through'),
-            'overline'  : ('text-decoration', 'overlie'),
+            'overline'  : ('text-decoration', 'overline'),
             # TODO frame
             }
 
