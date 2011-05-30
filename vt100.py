@@ -229,6 +229,12 @@ class HtmlFormatter (TextFormatter):
             # TODO frame
             }
 
+    escapes = {
+            '&' : '&amp;',
+            '<' : '&lt;',
+            '>' : '&gt;',
+            }
+
     def _apply_attr_map(self, attr):
         out = {}
         for key,value in attr.items():
@@ -275,7 +281,8 @@ class HtmlFormatter (TextFormatter):
                 if style:
                     out.append('<span style="%s">' % style)
                 last_style = style
-            out.append(c.char)
+            char = self.escapes.get(c.char, c.char)
+            out.append(char)
         if last_style:
             out.append('</span>')
         out.append(self.eol)
