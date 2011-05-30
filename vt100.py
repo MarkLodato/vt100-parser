@@ -235,6 +235,33 @@ class HtmlFormatter (TextFormatter):
             '>' : '&gt;',
             }
 
+    # [black, red, green, brown/yellow, blue, magenta, cyan, white]
+    # Colors used by xterm (before patch #192, blues were #0000cd and #0000ff)
+    color_16 = ['#000000', '#cd0000', '#00cd00', '#cdcd00',
+                '#0000e8', '#cd00cd', '#00cdcd', '#e5e5e5',
+                '#7f7f7f', '#ff0000', '#00ff00', '#ffff00',
+                '#5c5cff', '#ff00ff', '#00ffff', '#ffffff']
+
+    def init(self):
+        self.init_colors()
+        self.attr_map = self.__class__.attr_map.copy()
+        self.attr_map['fg_color'] = ('color', self.colors)
+        self.attr_map['bg_color'] = ('background-color', self.colors)
+
+    def init_colors(self):
+        def create_color_table(color_scale, gray_scale):
+            table = self.color_16[:16]
+            for r, g, b in itertools.product(color_scale, repeat=3):
+                table.append('#%02x%02x%02x' % (r,g,b))
+            for g in gray_scale:
+                table.append('#%02x%02x%02x' % (g,g,g))
+            return table
+        self.color_256 = create_color_table([0, 95, 135, 175, 215, 255],
+                [i*10 + 8 for i in range(24)])
+        self.color_88 = create_color_table([0, 139, 205, 255],
+                [46, 92, 113, 139, 162, 185, 208, 231])
+        self.colors = list(self.color_256)
+
     def _apply_attr_map(self, attr):
         out = {}
         for key,value in attr.items():
@@ -1196,128 +1223,76 @@ class Terminal:
         l = param_list(param, 0)
         l_iter = iter(l)
         for n in l_iter:
-            def color_256():
-                """xterm 256-color extension"""
-                # TODO options for:
-                #   256-color
-                #   88-color
-                #   16-color
-                #   8-color
-                # TODO customizable colors through osc
-                # TODO move data to class level so subclasses can modify
-                try:
-                    m = next(l_iter)
-                    o = next(l_iter)
-                except StopIteration:
-                    return
-                if m != 5:
-                    # xterm stops parsing if this happens
-                    self.debug(0, 'invalid 256-color attribute: %s %s %s' %
-                            (m,n,o))
-                    return
-                key = 'fg_color' if n < 40 else 'bg_color'
-                if o < 16:
-                    [
-                        set_attr(key, '#000000'),
-                        set_attr(key, '#cd0000'),
-                        set_attr(key, '#00cd00'),
-                        set_attr(key, '#cdcd00'),
-                        set_attr(key, '#0000e8'),
-                        set_attr(key, '#cd00cd'),
-                        set_attr(key, '#00cdcd'),
-                        set_attr(key, '#e5e5e5'),
-                        set_attr(key, '#7f7f7f'),
-                        set_attr(key, '#ff0000'),
-                        set_attr(key, '#00ff00'),
-                        set_attr(key, '#ffff00'),
-                        set_attr(key, '#5c5cff'),
-                        set_attr(key, '#ff00ff'),
-                        set_attr(key, '#00ffff'),
-                        set_attr(key, '#ffffff'),
-                    ][o]()
-                elif o < 232:
-                    o -= 16
-                    r, o = divmod(o, 36)
-                    g, o = divmod(o, 6)
-                    b = o
-                    r = r*40 + 55  if r else 0
-                    g = g*40 + 55  if g else 0
-                    b = b*40 + 55  if b else 0
-                    set_attr(key, '#%02x%02x%02x' % (r,g,b))
-                elif o < 256:
-                    gray = (o-232) * 10 + 8
-                    set_attr(key, '#%02x%02x%02x' % (gray,gray,gray))
-            def clear_all():
+            if n == 0:
                 self.attr.clear()
-            def set_attr(key, value = True):
-                def f(key=key, value=value):
-                    self.attr[key] = value
-                return f
-            def clear_attr(key):
-                def f(key=key):
+            elif 30 <= n <= 38 or 40 <= n <= 48:
+                if n in (38, 48):
                     try:
-                        del self.attr[key]
-                    except KeyError:
-                        pass
-                return f
-            try:
-                {
-                    0   : clear_all,
-                    1   : set_attr('weight', 'bold'),
-                    2   : set_attr('weight', 'faint'),
-                    3   : set_attr('style', 'italic'),
-                    4   : set_attr('underline', 'single'),
-                    5   : set_attr('blink', 'slow'),
-                    6   : set_attr('blink', 'rapid'),
-                    7   : set_attr('inverse'),
-                    8   : set_attr('hidden'),
-                    9   : set_attr('strikeout'),
-                    # 10-19 font stuff
-                    20  : set_attr('style', 'fraktur'),
-                    21  : set_attr('underline', 'double'),
-                    22  : clear_attr('weight'),
-                    23  : clear_attr('style'),
-                    24  : clear_attr('underline'),
-                    25  : clear_attr('blink'),
-                    # 26 reserved
-                    27  : clear_attr('inverse'),
-                    28  : clear_attr('hidden'),
-                    29  : clear_attr('strikeout'),
-                    30  : set_attr('fg_color', 'black'),
-                    31  : set_attr('fg_color', 'red'),
-                    32  : set_attr('fg_color', 'green'),
-                    33  : set_attr('fg_color', 'yellow'),
-                    34  : set_attr('fg_color', 'blue'),
-                    35  : set_attr('fg_color', 'magenta'),
-                    36  : set_attr('fg_color', 'cyan'),
-                    37  : set_attr('fg_color', 'white'),
-                    38  : color_256,
-                    39  : clear_attr('fg_color'),
-                    40  : set_attr('bg_color', 'black'),
-                    41  : set_attr('bg_color', 'red'),
-                    42  : set_attr('bg_color', 'green'),
-                    43  : set_attr('bg_color', 'yellow'),
-                    44  : set_attr('bg_color', 'blue'),
-                    45  : set_attr('bg_color', 'magenta'),
-                    46  : set_attr('bg_color', 'cyan'),
-                    47  : set_attr('bg_color', 'white'),
-                    48  : color_256,
-                    49  : clear_attr('bg_color'),
-                    # 50 reserved
-                    51  : set_attr('frame', 'box'),
-                    52  : set_attr('frame', 'circle'),
-                    53  : set_attr('overline'),
-                    54  : clear_attr('frame'),
-                    55  : clear_attr('overline'),
-                    # 56-59 reserved
-                    # 60-65 ideogram stuff
-                    # 90-107 xterm 16-color support enabled (light colors)
-                    # 100 xterm 16-color support disabled
-                }[n]()
-            except KeyError:
-                self.debug(0, 'unknown attribute: %s' % n)
-                pass
+                        m = next(l_iter)
+                        o = next(l_iter)
+                    except StopIteration:
+                        break
+                    if m != 5:
+                        # xterm stops parsing if this happens
+                        self.debug(0, 'invalid 256-color attribute: %s %s %s' %
+                                (m,n,o))
+                        break
+                    value = o
+                else:
+                    value = n % 10
+                key = 'fg_color' if n < 40 else 'bg_color'
+                self.attr[key] = value
+            else:
+                try:
+                    key, value = self.sgr_table[n]
+                except KeyError:
+                    self.debug(0, 'unknown attribute: %s' % n)
+                    pass
+                else:
+                    if value is None:
+                        self.attr.pop(key, None)
+                    else:
+                        self.attr[key] = value
 
+    sgr_table = {
+            # 0 clear all attributes
+            1   : ('weight', 'bold'),
+            2   : ('weight', 'faint'),
+            3   : ('style', 'italic'),
+            4   : ('underline', 'single'),
+            5   : ('blink', 'slow'),
+            6   : ('blink', 'rapid'),
+            7   : ('inverse', True),
+            8   : ('hidden', True),
+            9   : ('strikeout', True),
+            # 10-19 font stuff
+            20  : ('style', 'fraktur'),
+            21  : ('underline', 'double'),
+            22  : ('weight', None),
+            23  : ('style', None),
+            24  : ('underline', None),
+            25  : ('blink', None),
+            # 26 reserved
+            27  : ('inverse', None),
+            28  : ('hidden', None),
+            29  : ('strikeout', None),
+            # 30-37 foreground color
+            # 38 foreground color (88- or 256-color extension)
+            39  : ('fg_color', None),
+            # 30-37 background color
+            # 38 background color (88- or 256-color extension)
+            49  : ('bg_color', None),
+            # 50 reserved
+            51  : ('frame', 'box'),
+            52  : ('frame', 'circle'),
+            53  : ('overline', True),
+            54  : ('frame', None),
+            55  : ('overline', None),
+            # 56-59 reserved
+            # 60-65 ideogram stuff
+            # 90-107 xterm 16-color support enabled (light colors)
+            # 100 xterm 16-color support disabled
+            }
 
     @control('!p')
     def DECSTR(self, command=None, param=None):
