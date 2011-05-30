@@ -1,5 +1,8 @@
 Version 0.4 - ????-??-??
 - Add --geometry option.
+- Add reading of configuration from ~/.vt100rc.
+- Internal refactoring.  Of note, now the entire input file is read at once.
+- Fix a few bugs.
 
 Version 0.3 - 2010-09-12
 - Increase Python compatibility:
