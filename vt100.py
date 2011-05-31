@@ -217,15 +217,18 @@ class HtmlFormatter (TextFormatter):
     """Terminal formatter for HTML output."""
 
     attr_map = {
-            'fg_color'  : ('color', None),
-            'bg_color'  : ('background-color', None),
-            'weight'    : ('font-weight', {'bold':'bold', 'feint':'lighter'}),
-            'underline' : ('text-decoration', 'underline'), # TODO double
-            'style'     : ('font-style', {'italic':'italic'}),
-            'blink'     : ('text-decoration', 'blink'), # no fast or slow
-            'hidden'    : ('display', 'hidden'),
-            'strikeout' : ('text-decoration', 'line-through'),
-            'overline'  : ('text-decoration', 'overline'),
+            # 'fg_color' and 'bg_color' set by init()
+            ('weight', 'bold') : 'font-weight: bold',
+            ('weight', 'feint') : 'font-weight: lighter',
+            ('underline', 'single') : 'text-decoration: underline',
+            ('underline', 'double') : ('text-decoration: underline; '
+                                       'border-bottom: 1px solid'),
+            ('style', 'italic') : 'font-style: italic',
+            ('blink', 'rapid') : 'text-decoration: blink',
+            ('blink', 'slow') : 'text-decoration: blink', # no fast or slow
+            ('hidden', True) : 'display: hidden',
+            ('strikeout', True) : 'text-decoration: line-through',
+            ('overline', True)  : 'text-decoration: overline',
             # TODO frame
             }
 
@@ -245,8 +248,8 @@ class HtmlFormatter (TextFormatter):
     def init(self):
         self.init_colors()
         self.attr_map = self.__class__.attr_map.copy()
-        self.attr_map['fg_color'] = ('color', self.colors)
-        self.attr_map['bg_color'] = ('background-color', self.colors)
+        for index, value in enumerate(self.color_256):
+            self.set_color(index, value)
 
     def init_colors(self):
         def create_color_table(color_scale, gray_scale):
@@ -260,39 +263,23 @@ class HtmlFormatter (TextFormatter):
                 [i*10 + 8 for i in range(24)])
         self.color_88 = create_color_table([0, 139, 205, 255],
                 [46, 92, 113, 139, 162, 185, 208, 231])
-        self.colors = list(self.color_256)
 
-    def _apply_attr_map(self, attr):
-        out = {}
-        for key,value in attr.items():
+    def set_color(self, index, value):
+        self.attr_map['fg_color', index] = 'color: %s' % value
+        self.attr_map['bg_color', index] = 'background-color: %s' % value
+
+    def _compute_style(self, attr):
+        # TODO implement inverse
+        out = []
+        for key in sorted(attr):
+            value = attr[key]
             try:
-                mapping_value = self.attr_map[key]
+                out.append( self.attr_map[key, value] )
             except KeyError:
                 # TODO verbose option?
-                print('unknown attribute: %s' % key, file=sys.stderr)
-                continue
-            key, v_mapping = mapping_value
-            if isinstance(v_mapping, str):
-                value = v_mapping
-            elif v_mapping is not None:
-                try:
-                    value = v_mapping[value]
-                except KeyError:
-                    # TODO verbose option?
-                    # TODO save original key value
-                    print('unknown value: %s:%s' % (key, value),
-                            file=sys.stderr)
-                    continue
-            out.setdefault(key, set()).add(value)
-        return out
-
-    def _format_attr(self, attr):
-        # TODO implement inverse
-        mapped_attr = self._apply_attr_map(attr)
-        return '; '.join(
-                "%s: %s" % (k, ' '.join(sorted(mapped_attr[k])))
-                for k in sorted(mapped_attr.keys())
-                )
+                print('unknown attribute: %s:%s' % (key, value),
+                        file=sys.stderr)
+        return '; '.join(out)
 
     def begin(self):
         return ['<pre>']
@@ -301,7 +288,7 @@ class HtmlFormatter (TextFormatter):
         out = []
         last_style = ''
         for c in line:
-            style = self._format_attr(c.attr)
+            style = self._compute_style(c.attr)
             if style != last_style:
                 if last_style:
                     out.append('</span>')
