@@ -66,9 +66,26 @@ CONFIGURATION
 =============
 
 By default, vt100.py reads ~/.vt100rc for the following 'key = value` pairs.
+COLOR is any valid HTML color.  The order does not matter, except that all the
+settings following ``[SECTION]`` belong to a specific section.
+
+background = COLOR
+    Default background color.
+
+color0 = COLOR
+... through ...
+color255 = COLOR
+    Color for the 8 ANSI colors (0-7), 8 bright ANSI colors (8-15), and xterm
+    extended colors (16-255).
+
+colorscheme = SECTION
+    Import settings from [SECTION] before any in the current section.
 
 format = {text, html}
     Default output format.  Default is 'text'.
+
+foreground = COLOR
+    Default foreground color.
 
 geometry = {WxH, detect}
     Use W columns and H rows in output.  If the value 'detect' is given, the
@@ -78,6 +95,9 @@ geometry = {WxH, detect}
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
     negative, respectively.  Default is '0'.
+
+[SECTION]
+    Start a definition of a color scheme named SECTION.
 
 
 REQUIREMENTS

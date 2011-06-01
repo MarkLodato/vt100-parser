@@ -67,9 +67,26 @@ CONFIGURATION
 =============
 
 By default, vt100.py reads ~/.vt100rc for the following 'key = value` pairs.
+COLOR is any valid HTML color.  The order does not matter, except that all the
+settings following ``[SECTION]`` belong to a specific section.
+
+background = COLOR
+    Default background color.
+
+color0 = COLOR
+... through ...
+color255 = COLOR
+    Color for the 8 ANSI colors (0-7), 8 bright ANSI colors (8-15), and xterm
+    extended colors (16-255).
+
+colorscheme = SECTION
+    Import settings from [SECTION] before any in the current section.
 
 format = {text, html}
     Default output format.  Default is 'text'.
+
+foreground = COLOR
+    Default foreground color.
 
 geometry = {WxH, detect}
     Use W columns and H rows in output.  If the value 'detect' is given, the
@@ -79,6 +96,9 @@ geometry = {WxH, detect}
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
     negative, respectively.  Default is '0'.
+
+[SECTION]
+    Start a definition of a color scheme named SECTION.
 
 
 REQUIREMENTS
@@ -182,12 +202,18 @@ if sys.version_info[0] == 2:
 class TextFormatter:
     """Terminal formatter for plain text output."""
 
-    def __init__(self, eol='\n'):
+    def __init__(self, config=None, eol='\n'):
         self.eol = eol
         self.init()
+        if config is not None:
+            self.parse_config(config)
 
     def init(self):
         """Initialize any default instance variables."""
+        pass
+
+    def parse_config(self, config):
+        """Parse a SafeConfigParser object."""
         pass
 
     def format(self, lines):
@@ -238,6 +264,11 @@ class HtmlFormatter (TextFormatter):
             '>' : '&gt;',
             }
 
+    default_options = {
+            'foreground' : '',
+            'background' : '',
+            }
+
     # [black, red, green, brown/yellow, blue, magenta, cyan, white]
     # Colors used by xterm (before patch #192, blues were #0000cd and #0000ff)
     color_16 = ['#000000', '#cd0000', '#00cd00', '#cdcd00',
@@ -248,6 +279,7 @@ class HtmlFormatter (TextFormatter):
     def init(self):
         self.init_colors()
         self.attr_map = self.__class__.attr_map.copy()
+        self.options = self.__class__.default_options.copy()
         for index, value in enumerate(self.color_256):
             self.set_color(index, value)
 
@@ -268,6 +300,31 @@ class HtmlFormatter (TextFormatter):
         self.attr_map['fg_color', index] = 'color: %s' % value
         self.attr_map['bg_color', index] = 'background-color: %s' % value
 
+    def parse_config(self, config):
+        self._parse_config(config, config.default_section, set())
+
+    def _parse_config(self, config, section, seen):
+        if config.has_option(section, 'colorscheme'):
+            scheme = config.get(section, 'colorscheme')
+            if scheme not in seen:
+                if config.has_section(scheme):
+                    seen.add(scheme)
+                    self._parse_config(self, config, scheme, seen)
+                else:
+                    print('warning: colorscheme "%s" not found' % scheme,
+                            file=sys.stderr)
+            else:
+                print('warning: recursion in color scheme: [%s] -> %s'
+                        % (section, scheme), file=sys.stderr)
+        for i in range(256):
+            key = 'color%d'%i
+            if config.has_option(section, key):
+                self.set_color(i, config.get(section, key))
+        for key in self.options:
+            if config.has_option(section, key):
+                value = config.get(section, key)
+                self.options[key] = value
+
     def _compute_style(self, attr):
         # TODO implement inverse
         out = []
@@ -282,7 +339,16 @@ class HtmlFormatter (TextFormatter):
         return '; '.join(out)
 
     def begin(self):
-        return ['<pre>']
+        style = []
+        if self.options['foreground']:
+            style.append('color: %s' % self.options['foreground'])
+        if self.options['background']:
+            style.append('background-color: %s' % self.options['background'])
+        if style:
+            attribute = ' style="%s"' % '; '.join(style)
+        else:
+            attribute = ''
+        return ['<pre%s>' % attribute]
 
     def format_line(self, line):
         out = []
@@ -2385,7 +2451,7 @@ def main():
 
     if options.format is None:
         options.format = config.get(None, 'format')
-    formatter = formatters[options.format]()
+    formatter = formatters[options.format](config=config)
 
     if options.geometry is None:
         options.geometry = config.get(None, 'geometry')
