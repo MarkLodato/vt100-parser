@@ -93,6 +93,16 @@ geometry = {WxH, detect}
     current terminal's geometry is detected using ``stty size``.
     Default is '80x24'.
 
+inverse_bg = COLOR
+    Background color to use for the "inverse" attribute when neither the
+    character's foreground color attribute nor the ``foreground`` option is
+    set.  Default is 'black'.
+
+inverse_fg = COLOR
+    Foreground color to use for the "inverse" attribute when neither the
+    character's background color attribute nor the ``background`` option is
+    set.  Default is 'white'.
+
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
     negative, respectively.  Default is '0'.
@@ -267,6 +277,8 @@ class HtmlFormatter (TextFormatter):
     default_options = {
             'foreground' : '',
             'background' : '',
+            'inverse_fg' : 'white',
+            'inverse_bg' : 'black',
             }
 
     # [black, red, green, brown/yellow, blue, magenta, cyan, white]
@@ -302,6 +314,10 @@ class HtmlFormatter (TextFormatter):
 
     def parse_config(self, config):
         self._parse_config(config, config.default_section, set())
+        if self.options['foreground']:
+            self.options['inverse_bg'] = self.options['foreground']
+        if self.options['background']:
+            self.options['inverse_fg'] = self.options['background']
 
     def _parse_config(self, config, section, seen):
         if config.has_option(section, 'colorscheme'):
@@ -328,6 +344,17 @@ class HtmlFormatter (TextFormatter):
     def _compute_style(self, attr):
         # TODO implement inverse
         out = []
+        if attr.pop('inverse', None):
+            fg = attr.pop('fg_color', None)
+            bg = attr.pop('bg_color', None)
+            if fg is not None:
+                attr['bg_color'] = fg
+            else:
+                out.append('background-color: %s' % self.options['inverse_bg'])
+            if bg is not None:
+                attr['fg_color'] = bg
+            else:
+                out.append('color: %s' % self.options['inverse_fg'])
         for key in sorted(attr):
             value = attr[key]
             try:

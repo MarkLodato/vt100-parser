@@ -92,6 +92,16 @@ geometry = {WxH, detect}
     current terminal's geometry is detected using ``stty size``.
     Default is '80x24'.
 
+inverse_bg = COLOR
+    Background color to use for the "inverse" attribute when neither the
+    character's foreground color attribute nor the ``foreground`` option is
+    set.  Default is 'black'.
+
+inverse_fg = COLOR
+    Foreground color to use for the "inverse" attribute when neither the
+    character's background color attribute nor the ``background`` option is
+    set.  Default is 'white'.
+
 verbosity = INT
     Act as those ``-v`` or ``-q`` was given abs(INT) times, if INT positive or
     negative, respectively.  Default is '0'.

@@ -38,8 +38,6 @@ Options
 Output
 ======
 
-* 'inverse' attribute for HTML
-
 * Xterm keeps track of long lines so that you can select wrapped lines as a
   single line.  This is not possible for text output, but it might be in HTML.
   It is possible to set the ``pre``\ 's style to wrap using the following::
