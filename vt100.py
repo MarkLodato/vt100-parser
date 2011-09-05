@@ -262,7 +262,7 @@ class HtmlFormatter (TextFormatter):
             ('style', 'italic') : 'font-style: italic',
             ('blink', 'rapid') : 'text-decoration: blink',
             ('blink', 'slow') : 'text-decoration: blink', # no fast or slow
-            ('hidden', True) : 'display: hidden',
+            ('hidden', True) : 'visibility: hidden',
             ('strikeout', True) : 'text-decoration: line-through',
             ('overline', True)  : 'text-decoration: overline',
             # TODO frame
