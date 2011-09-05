@@ -365,7 +365,6 @@ class HtmlFormatter (TextFormatter):
             out.append(char)
         if last_style:
             out.append('</span>')
-        out.append(self.eol)
         return ''.join(out)
 
     def end(self):
