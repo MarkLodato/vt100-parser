@@ -21,7 +21,7 @@ cut and pasted the output from the terminal.
 
 This program can be used to parse any file containing ANSI (ECMA-48) terminal
 codes.  Usually the input is a typescript file as output from script(1), which
-are usually very unreadable.  Another potential use of this program to to
+is usually not human-readable.  Another potential use of this program to to
 parse the output of a program that produces color codes (ESC [ # m) and
 produce color HTML.
 
