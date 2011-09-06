@@ -73,9 +73,7 @@ settings following ``[SECTION]`` belong to a specific section.
 background = COLOR
     Default background color.
 
-color0 = COLOR
-... through ...
-color255 = COLOR
+color0 = COLOR ...through... color255 = COLOR
     Color for the 8 ANSI colors (0-7), 8 bright ANSI colors (8-15), and xterm
     extended colors (16-255).
 
