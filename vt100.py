@@ -2407,6 +2407,8 @@ class FileInserter:
     def readline(self):
         self.readline = self.fp.readline
         return self.line
+    def __iter__(self):
+        return itertools.chain([self.line], self.fp)
 
 
 class SimpleConfigParser (ConfigParser):
