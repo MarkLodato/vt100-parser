@@ -313,7 +313,7 @@ class HtmlFormatter (TextFormatter):
         self.attr_map['bg_color', index] = 'background-color: %s' % value
 
     def parse_config(self, config):
-        self._parse_config(config, config.default_section, set())
+        self._parse_config(config, config.initial_section, set())
         if self.options['foreground']:
             self.options['inverse_bg'] = self.options['foreground']
         if self.options['background']:
@@ -2412,16 +2412,16 @@ class SimpleConfigParser (ConfigParser):
     Based on SimpleConfigParser, copyright 2010 Philippe Lagadec.
     """
     def __init__(self, *args, **kwargs):
-        self.default_section = kwargs.pop('default_section', 'NOSECTION')
+        self.initial_section = kwargs.pop('initial_section', 'NOSECTION')
         ConfigParser.__init__(self, *args, **kwargs)
-        self.add_section(self.default_section)
+        self.add_section(self.initial_section)
     def _read(self, fp, fpname):
-        firstline = '[%s]\n' % self.default_section
+        firstline = '[%s]\n' % self.initial_section
         fp = FileInserter(fp, firstline)
         return ConfigParser._read(self, fp, fpname)
     def get(self, section, *args, **kwargs):
         if section is None:
-            section = self.default_section
+            section = self.initial_section
         return ConfigParser.get(self, section, *args, **kwargs)
 
 
