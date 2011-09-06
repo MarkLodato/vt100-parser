@@ -61,6 +61,12 @@ OPTIONS
 -q, --quiet                 decrease debugging verbosity
 -v, --verbose               increase debugging verbosity
 
+The following only affect HTML output.
+
+--background=COLOR          set the default background color
+--foreground=COLOR          set the default foreground color
+--colorscheme=SCHEME        use the given color scheme (see "Configuration")
+
 
 CONFIGURATION
 =============

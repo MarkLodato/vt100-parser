@@ -62,6 +62,12 @@ OPTIONS
 -q, --quiet                 decrease debugging verbosity
 -v, --verbose               increase debugging verbosity
 
+The following only affect HTML output.
+
+--background=COLOR          set the default background color
+--foreground=COLOR          set the default foreground color
+--colorscheme=SCHEME        use the given color scheme (see "Configuration")
+
 
 CONFIGURATION
 =============
@@ -187,7 +193,7 @@ import os.path
 import re
 import subprocess
 import sys
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 try:
     from ConfigParser import SafeConfigParser as ConfigParser
 except ImportError:
@@ -2421,6 +2427,10 @@ class SimpleConfigParser (ConfigParser):
         if section is None:
             section = self.initial_section
         return ConfigParser.get(self, section, *args, **kwargs)
+    def set(self, section, *args, **kwargs):
+        if section is None:
+            section = self.initial_section
+        return ConfigParser.set(self, section, *args, **kwargs)
 
 
 def main():
@@ -2444,6 +2454,16 @@ def main():
             help='decrease debugging verbosity')
     parser.add_option('-v', '--verbose', action='count', default=0,
             help='increase debugging verbosity')
+
+    html_group = OptionGroup(parser, "HTML Options")
+    html_group.add_option('--background', metavar='COLOR',
+            help="set the default foreground color")
+    html_group.add_option('--foreground', metavar='COLOR',
+            help="set the default background color")
+    html_group.add_option('--colorscheme', metavar='SCHEME',
+            help='use the given color scheme')
+    parser.add_option_group(html_group)
+
     options, args = parser.parse_args()
 
     if options.man:
@@ -2459,6 +2479,12 @@ def main():
     if not options.no_rc:
         configfile = os.path.expanduser(options.rc)
         config.read(configfile)
+
+    for opt in html_group.option_list:
+        name = opt.dest
+        value = getattr(options, name)
+        if value is not None:
+            config.set(None, name, value)
 
     options.verbose -= options.quiet
     options.verbose += config.getint(None, 'verbosity')
