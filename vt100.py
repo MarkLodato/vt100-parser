@@ -2429,7 +2429,7 @@ def main():
     version = "%%prog %s" % __version__
     parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
-            help='print the manual page and exit')
+            help='show the manual page and exit')
     parser.add_option('-f', '--format', choices=('text','html'),
             help='output format.  Choices: text, html')
     parser.add_option('-g', '--geometry', metavar='WxH',
