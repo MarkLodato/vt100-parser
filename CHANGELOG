@@ -1,6 +1,12 @@
 Version 0.4 - ????-??-??
-- Add --geometry option.
-- Add reading of configuration from ~/.vt100rc.
+- Read configuration from ~/.vt100rc (override with --rc or --no-rc).
+- Using config file, support color schemes.
+- New options:
+    * -g / --geometry
+    * --foreground
+    * --background
+    * --colorscheme
+    * --rc / --no-rc
 - Implement the "inverse" graphics attribute.
 - Internal refactoring.  Of note, now the entire input file is read at once.
 - Fix a few bugs.
