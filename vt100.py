@@ -9,7 +9,7 @@ vt100.py - Parse a typescript and output text.
 SYNOPSIS
 ========
 
-``vt100.py [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)``
+``vt100.py [OPTIONS] [-f FORMAT] [-g WxH] (filename|-)``
 
 
 DESCRIPTION
@@ -2427,7 +2427,7 @@ class SimpleConfigParser (ConfigParser):
 
 def main():
 
-    usage = "%prog [-q|-v] [-f FORMAT] [-g WxH] [--non-script] (filename|-)"
+    usage = "%prog [OPTIONS] [-f FORMAT] [-g WxH] (filename|-)"
     version = "%%prog %s" % __version__
     parser = OptionParser(usage=usage, version=version)
     parser.add_option('--man', action='store_true', default=False,
