@@ -323,7 +323,7 @@ class HtmlFormatter (TextFormatter):
             if scheme not in seen:
                 if config.has_section(scheme):
                     seen.add(scheme)
-                    self._parse_config(self, config, scheme, seen)
+                    self._parse_config(config, scheme, seen)
                 else:
                     print('warning: colorscheme "%s" not found' % scheme,
                             file=sys.stderr)
