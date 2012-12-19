@@ -100,7 +100,7 @@ def rawcat(files, outfile, bufsiz=None, wait=None, reset=False,
             outfile.write('\x1bc')
         for filename in files:
             if filename == '-':
-                f = sys.stdout
+                f = sys.stdin
             else:
                 f = open(filename, 'rb')
             while True:
