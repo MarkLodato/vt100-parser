@@ -2496,7 +2496,13 @@ def main():
         parser.error('missing required filename argument')
     filename, = args
     if filename == '-':
-        text = sys.stdin.read()
+        if hasattr(sys.stdin, 'buffer'):
+            # Python 3: Read in binary mode
+            text = sys.stdin.buffer.read()
+        else:
+            # Python 2: Technically we should be reading in binary mode on
+            # Windows, but that's too difficult. This works on Linux at least.
+            text = sys.stdin.read()
     else:
         with open(filename, 'rb') as f:
             text = f.read()
