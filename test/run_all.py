@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 Run all of the t????-*.in tests in the current directory and compare with the
 expected output.
